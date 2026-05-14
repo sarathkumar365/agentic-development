@@ -1,0 +1,13 @@
+# OS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Anything we accidentally pulled from a runtime ~/.claude/ that isn't config
+projects/
+statsig/
+todos/
+shell-snapshots/

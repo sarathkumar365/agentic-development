@@ -18,6 +18,7 @@ This is a multi-turn deliberation, not a one-shot answer.
 - **Decisions are theirs.** Surface trade-offs honestly; don't pick the path when the answer depends on context only they have. When one path is clearly better, say so — but only when it actually is.
 - **Future-aware.** Where a decision locks them into a direction for the next 6 months, name that. Where a fix is throwaway, say that too.
 - **Completeness within scope, not blanket completeness.** Be thorough about what the user pointed at. Don't pile on unrelated issues unless they explicitly asked for a broad sweep.
+- **The outcome is a written artifact, not a conversation.** Deliberation ends in a document the user (and future contributors) can read, review, and act on. The conversation is the *process*; the doc in `Docs/` is the *product*.
 
 ## Step 0 — Detect mode and scope BEFORE surveying
 
@@ -145,14 +146,54 @@ Use a table when there are 3+ paths. Be honest when one path is clearly better �
 
 ## Step 5 — Synthesize once they've decided
 
-After the user picks a direction, write the plan:
+The deliverable is a **written artifact** that lives in the `Docs/` tree at a predictable location and follows phased structure when the work is non-trivial.
+
+### Per-mode deliverable
+
+| Mode | Artifact | Lives at |
+|---|---|---|
+| **FEATURE** | Phased implementation plan + phase tracker | `Docs/features/<slug>/plan.md` + `phases.md` |
+| **BUG** (simple, localized fix) | New row in bug ledger + fix outline | `Docs/bugs.md` |
+| **BUG** (non-trivial — multi-file, regression, racey) | Deep-dive write-up + phased fix plan | `Docs/deep-dive/YYYY-MM-DD-<slug>.md` |
+| **AUDIT** | Audit report (findings + prioritized actions) | `Docs/audits/<topic>-audit-YYYY-MM-DD.md` |
+| **REPLAN** | Revised existing plan with changelog at top | `Docs/features/<slug>/plan.md` (in place) |
+
+### When to phase, when not to
+
+**Single-block plan** is appropriate when:
+- BUG with a small, localized fix (one or two files, isolated)
+- FEATURE that's a tiny addition (a single small endpoint, one config field)
+- AUDIT finding that's a one-line correction
+
+**Phased plan** is required when:
+- Multiple modules touched
+- Schema or contract changes
+- Anything safer to land in steps
+- Anything where phase-level review is valuable
+
+If unsure, lean phased. The cost of phasing trivial work is small; the cost of unphased complex work is rework.
+
+### Universal phasing principles (when phased)
+
+- **Each phase is reviewable alone.** A reviewer can read Phase 1 and approve or push back without needing Phase 5.
+- **Each phase has a clear "done" signal** — test pass, feature flag flip, metric hit, manual verification step.
+- **Phases minimize blast radius.** Phase 1 is the smallest useful or safely revertible thing.
+- **No phase merges code that requires a future phase to be useful** — or if it does, name the dependency explicitly.
+- **If the project has a phase-doc convention** (e.g. `phase-<n>-implementation.md` per AGENTS.md), follow it.
+
+### Universal content (every plan, phased or not)
 
 - **Order of work** with dependencies
 - **Explicit non-goals** — what's deferred and why
-- **Risks** and how you'd detect them mid-flight
-- **Validation criteria** — how do we know it worked?
+- **Risks** with mid-flight detection signals
+- **Validation criteria** — how we know it worked
+- **Linked decisions** — which `Docs/repo-decisions/` apply; which need to be created
 
-Plan should be tight. Bullets, not paragraphs — unless a trade-off needs nuance.
+Plans should be tight. Bullets, not paragraphs — unless a trade-off needs nuance.
+
+### Do not create the file yet
+
+In this step you **propose** the plan content and where it would go. Step 6 is approval. File creation and implementation happen after approval — not before.
 
 ## Step 6 — Confirm before any implementation
 

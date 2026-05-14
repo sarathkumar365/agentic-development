@@ -14,6 +14,7 @@ This is multi-turn deliberation, not a one-shot answer.
 - **Don't decide what I should decide.** Surface trade-offs honestly. Recommend when one path is clearly better; otherwise present options.
 - **Future-aware.** If a decision locks in a direction for months, name that.
 - **Completeness within scope, not blanket completeness.** Be thorough about what I pointed at. Don't pile on unrelated issues unless I asked for a broad sweep.
+- **Outcome is a written artifact, not a conversation.** Deliberation ends in a doc in `Docs/` that I (and future me) can read, review, act on.
 
 ## Step 0 — Detect mode and scope BEFORE surveying
 
@@ -75,7 +76,25 @@ Ask for context I have that you don't (deadlines, priorities, past decisions). S
 For each finding or grouped decision: Path A / Path B / what NOT doing each costs. Table for 3+ paths. Recommend when one path is clearly better.
 
 ## Step 5 — Synthesize after I decide
-Plan: order of work, dependencies, explicit non-goals, risks, validation criteria.
+
+Deliverable is a **written artifact** in `Docs/`, phased when non-trivial.
+
+**Per-mode deliverable:**
+| Mode | Artifact | Lives at |
+|---|---|---|
+| FEATURE | Phased implementation plan + phase tracker | `Docs/features/<slug>/plan.md` + `phases.md` |
+| BUG (simple) | Row in `Docs/bugs.md` + fix outline | `Docs/bugs.md` |
+| BUG (non-trivial) | Deep-dive write-up + phased fix plan | `Docs/deep-dive/YYYY-MM-DD-<slug>.md` |
+| AUDIT | Audit report (findings + prioritized actions) | `Docs/audits/<topic>-audit-YYYY-MM-DD.md` |
+| REPLAN | Revised plan, changelog at top | `Docs/features/<slug>/plan.md` (in place) |
+
+**Phase when:** multiple modules touched, schema/contract changes, safer to land in steps, phase-level review valuable. **Single-block when:** small localized fix, tiny addition, one-line correction. If unsure, lean phased.
+
+**Phasing principles:** each phase reviewable alone, clear done signal, minimal blast radius, no phase requires a future phase to be useful, follow project's `phase-<n>-implementation.md` convention if present.
+
+**Every plan includes:** order of work + dependencies, explicit non-goals, risks + detection signals, validation criteria, linked `Docs/repo-decisions/`.
+
+**Do NOT create the file yet.** Propose the content and location. File creation happens after Step 6 approval.
 
 ## Step 6 — Confirm before executing
 Ask **"Approve and proceed, or adjust?"** Wait for explicit approval before any implementation.

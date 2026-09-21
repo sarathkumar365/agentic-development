@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "agentic-development",
+  "description": "Sarath's portable agent workbench: a gated idea-to-product pipeline, drift auditing, and project scaffolding that install onto any machine with one command.",
+  "owner": {
+    "name": "Sarath Kumar",
+    "url": "https://github.com/sarathkumar365"
+  },
+  "plugins": [
+    {
+      "name": "agentic-development",
+      "description": "Phase-gated pipeline that turns a raw idea into a locked contract, a market verdict, a spec with falsifiable bars, a stack, a build plan, and a scaffolded repo.",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}

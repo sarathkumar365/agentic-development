@@ -1,0 +1,12 @@
+# Operator profile
+
+Imported by `CLAUDE.md`. Machine- and person-specific. Not tracked — regenerate per machine.
+
+## Who and how
+
+- Solo founder-engineer. My team is me plus you. Assume no other engineers unless I say otherwise.
+- Local-first, free-tier-first. Buy hardware or paid APIs only after a local path is proven impossible.
+- Dev box: RTX 2070 Super (8 GB VRAM), i5 12th gen, 16 GB RAM. Verify with `nvidia-smi` before sizing a model.
+- Python default. Monorepo default. Private GitHub repos under `sarathkumar365`.
+- Licences matter: no AGPL in anything shippable; research-only datasets never enter training.
+- I move fast and change direction. Keep decisions written down so the change is cheap.

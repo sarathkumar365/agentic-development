@@ -28,7 +28,7 @@ echo "[init] Stamping skeleton from $SKELETON into $TARGET"
 cp -R "$SKELETON/." "$TARGET/"
 
 echo "[init] Done. Files created:"
-(cd "$TARGET" && find AGENTS.md Docs .claude -type f 2>/dev/null | sort)
+(cd "$TARGET" && find AGENTS.md CLAUDE.md Docs .claude -type f 2>/dev/null | sort)
 
 echo
 echo "Next steps:"

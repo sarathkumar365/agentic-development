@@ -1,90 +1,125 @@
 # Agentic Development
 
-Personal config repo for AI coding agents (Claude Code, Codex, Copilot, Cursor, future ones). Single source of truth; sync to each agent's expected location with a script.
+A portable, evolving workbench for AI coding agents. One git repo is the source of truth; any
+machine becomes a fully configured workstation with one command; improvements made while working
+flow back automatically.
 
-## Why this exists
+Built for Claude Code first, structured so other agents (Codex, Cursor, Copilot) plug into the
+same content.
 
-- Different agents read config from different places (`~/.claude/`, `~/.codex/`, etc.) but my workflow doesn't change between them. I want one place to author skills, commands, agents, and project templates, and one command to push them out to wherever they need to live.
-- Backed by git so the work survives machine changes, accidents, and "I deleted that, didn't I."
-- Project templates so every new repo gets a consistent starting layout (`AGENTS.md`, `Docs/` tree, safety hooks).
+## Install on a new machine
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/sarathkumar365/agentic-development/main/bin/bootstrap.sh | bash
+```
+
+Clones the repo, links it into `~/.claude/`, creates a per-machine `profile.md`, and reports
+anything still missing. Idempotent — re-run it any time to update.
+
+Lighter alternative, skills and agents only, no doctrine or templates:
+
+```bash
+claude plugin marketplace add sarathkumar365/agentic-development
+```
+
+## The three properties this is built for
+
+| Property | Mechanism |
+|---|---|
+| Works on any machine | `bin/bootstrap.sh` — one command, no manual steps. Also installable as a Claude Code plugin marketplace. |
+| Migrates and installs itself | Bootstrap detects missing prerequisites, clones, links, and seeds the machine profile from detected hardware. |
+| Evolves | `bin/sync.sh` symlinks rather than copies, so edits made while working are already repo changes. `bin/capture.sh` adopts, commits and pushes them. The `evolve` skill decides where a learning belongs. |
+
+The symlink choice is the load-bearing one. A copy-based sync is one-way: work done on machine B
+is silently lost on the next sync. Symlinked, `~/.claude/skills/foo` *is*
+`~/agentic-development/skills/foo`, so there is no drift to reconcile.
 
 ## Layout
 
 ```
 agentic-development/
-├── claude/                      # mirror of ~/.claude/
-│   ├── skills/
-│   │   └── consult/             # senior-engineer thinking-partner skill
-│   ├── commands/
-│   │   └── consult.md           # /consult slash command
-│   └── agents/                  # custom subagents (empty for now)
-├── codex/                       # mirror of ~/.codex/  (when used)
-├── shared/                      # agent-agnostic content
-├── templates/
-│   └── project-skeleton/        # standard layout for any new project
-│       ├── files/               # what gets stamped into the project
-│       │   ├── AGENTS.md
-│       │   ├── Docs/
-│       │   └── .claude/settings.json   # safety hooks
-│       └── init.sh              # the stamp script
+├── .claude-plugin/
+│   ├── marketplace.json         # makes this repo installable as a plugin marketplace
+│   └── plugin.json
+├── skills/                      # → ~/.claude/skills/   (also the plugin's skills)
+├── agents/                      # → ~/.claude/agents/
+├── commands/                    # → ~/.claude/commands/
+├── home/
+│   ├── CLAUDE.md                # → ~/.claude/CLAUDE.md — global doctrine, public-safe
+│   └── profile.md.example       # → ~/.claude/profile.md — machine-specific, gitignored
+├── templates/project-skeleton/  # stamped into new repos by init.sh
 └── bin/
-    └── sync.sh                  # push claude/ → ~/.claude/, codex/ → ~/.codex/, etc.
+    ├── bootstrap.sh             # new machine, one command
+    ├── sync.sh                  # link repo into ~/.claude (--copy, --dry-run, --status)
+    └── capture.sh               # commit and push what changed, adopt loose files
 ```
 
-## Two commands you'll actually run
+## What ships
 
-### Sync personal config out to the agents
+### Doctrine — `home/CLAUDE.md`
 
-After editing anything under `claude/` (or `codex/`, etc.):
+Loaded into every session on every project. Response style, decide-don't-interrogate, anti-drift,
+phase discipline, scope guards. Personal and machine facts are split into `profile.md`, which is
+gitignored — this repo is public.
+
+### The idea-to-product pipeline
+
+Six gated phases. One phase per turn, an approval gate between each, so validation never slides
+into architecture inside the same reply.
+
+| Phase | Skill | Artefact | Gate |
+|---|---|---|---|
+| 0 Lock | `idea-lock` | `docs/idea-contract.md` | Lock this, or amend it? |
+| 1 Proof | `market-proof` | `docs/market-landscape.md` | BUILD / NARROW / KILL |
+| 2 Spec | `product-spec` | `docs/product-spec-v1.md` | Veto anything? |
+| 3 Stack | `stack-decide` | `docs/stack-v1.md` | Veto any row? |
+| 4 Blocks | `block-plan` | `docs/build-plan-v1.md` | Start B0? |
+| 5 Init | `project-init` | repo + private GitHub remote | Build B0? |
+
+`new-idea` orchestrates all six. Say "just do it" for the fast path: every phase runs on
+defaults, one consolidated report, a single veto at the end.
+
+### Other skills
+
+- `evolve` — turn a session learning into a tracked change, then commit and push it.
+- `consult` — senior-engineer thinking partner for feature, bug, audit and replan work.
+
+### Agents
+
+- `drift-check` — audits a plan or diff against the locked idea contract. Reports
+  `VIOLATION / SCOPE-CREEP / UNSTATED / DROPPED / RE-LITIGATED`, one line each. Never proposes fixes.
+- `market-scout` — parallel research fan-out returning compressed cited evidence, no verdict.
+
+### Project skeleton
 
 ```bash
-~/agentic-development/bin/sync.sh
+~/agentic-development/templates/project-skeleton/init.sh [target]
 ```
 
-Additive by default — won't delete anything in `~/.claude/` that isn't tracked here. Pass `--clean` to mirror exactly (deletes destination files not in source).
+Stamps `AGENTS.md` (cross-agent working agreement), `CLAUDE.md` (imports it, adds Claude-specific
+rules), the `Docs/` tree, and `.claude/settings.json` safety hooks. Refuses to overwrite an
+existing `AGENTS.md`.
 
-### Stamp the standard layout into a new project
-
-In a fresh repo:
+## Daily commands
 
 ```bash
-~/agentic-development/templates/project-skeleton/init.sh
+~/agentic-development/bin/sync.sh --status    # what is linked, diverged, or untracked
+~/agentic-development/bin/capture.sh          # push what this machine learned
+~/agentic-development/bin/bootstrap.sh        # pull what other machines learned
 ```
 
-Or target a specific directory:
-
-```bash
-~/agentic-development/templates/project-skeleton/init.sh ~/Projects/new-thing
-```
-
-Refuses to overwrite an existing `AGENTS.md` so you can't accidentally clobber real work.
-
-## Adding a new agent
-
-When you start using a new agent (say Codex):
-
-1. `mkdir codex/` and put its config there in the layout it expects under `~/.codex/`
-2. Uncomment `sync_agent codex` in `bin/sync.sh`
-3. Run `bin/sync.sh`
-
-## Adding a new skill / command / template
-
-1. Author it under the appropriate subdir (e.g. `claude/skills/<name>/SKILL.md`)
-2. `bin/sync.sh`
-3. Restart your agent (skills/commands are picked up at session start)
-4. Commit and push so it survives
+Skills and agents load at session start — restart Claude Code after syncing.
 
 ## Conventions
 
-- Anything under `claude/` and `codex/` should be **portable across projects** — refer to standard convention paths (`AGENTS.md`, `Docs/bugs.md`) by relative path; gracefully handle their absence.
-- Anything that depends on a specific codebase belongs in **that project's** `.claude/skills/`, not here.
-- `templates/` files should be self-contained — usable in any project regardless of language or stack.
+- Anything in `skills/`, `agents/`, `commands/` must be **portable across projects**. Refer to
+  convention paths (`AGENTS.md`, `docs/`) relatively, and handle their absence gracefully.
+- Anything tied to one codebase belongs in that project's `.claude/skills/`, not here.
+- `templates/` files stay self-contained and language-agnostic.
+- This repo is public: no secrets, no tokens, no transcripts, no personal machine details.
+  Those go in `~/.claude/profile.md`, which is gitignored.
 
-## What's NOT in this repo (and shouldn't be)
+## Deliberately not here
 
-- `~/.claude/projects/` — session transcripts, large and personal
-- `~/.claude/statsig/`, `~/.claude/todos/` — runtime state
-- API tokens, OAuth credentials, anything sensitive
-- Project-specific skills (those live in each project's `.claude/`)
-
-See `.gitignore`.
+`~/.claude/projects/` (transcripts), `~/.claude/statsig/`, `~/.claude/todos/`, `backups/`,
+`session-env/`, credentials of any kind, and project-specific skills.

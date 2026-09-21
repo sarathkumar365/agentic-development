@@ -11,3 +11,11 @@ projects/
 statsig/
 todos/
 shell-snapshots/
+
+# Per-machine, per-operator. Generated from home/profile.md.example by bin/bootstrap.sh.
+home/profile.md
+profile.md
+
+# Runtime state that must never be tracked
+backups/
+session-env/

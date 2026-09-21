@@ -1,5 +1,6 @@
-# Idea Contract — agentic-development v0.1
+# Idea Contract — agentic-development v0.2
 Status: LOCKED  ·  Date: 2026-09-21
+Amended 2026-09-21 after Phase 1 verdict NARROW (see docs/market-landscape.md).
 
 ## One line
 A git repo that is the single source of truth for how every AI coding agent on every machine the
@@ -15,9 +16,11 @@ a new machine with one command. It also serves as the central place where new ge
 skills, scripts and tool definitions accumulate over time.
 
 ## Invariants
-1. **Vendor-neutral source, generated adapters.** Content is authored once in a neutral form.
-   Per-agent files (`CLAUDE.md`, `AGENTS.md`, Codex config, Copilot instructions) are rendered
-   from it. The same rule is never hand-maintained in two places.
+1. **Author once, `AGENTS.md` first.** Instruction content is authored once, with `AGENTS.md`
+   as the primary artefact — it is an open standard read by 30+ agents. Any other per-agent file
+   is a thin shim that points at it, never a second copy of the rules. Amended v0.2: this was
+   "generated adapters"; the render layer shrinks to a shim because the standard now does the
+   work.
 2. **Two config layers stay distinct.** Global doctrine (applies to every session, every project)
    and project rules (apply to one repo) are separate inputs with separate lifecycles.
 3. **One idempotent command per machine.** A new machine becomes a configured workstation with a
@@ -26,6 +29,9 @@ skills, scripts and tool definitions accumulate over time.
    divergent copy that a later sync silently discards.
 5. **Open-ended hub.** Adding a new skill, script, MCP server or agent definition requires no
    change to the system's structure.
+6. **Content is the asset, plumbing is borrowed.** Added v0.2. Effort goes to doctrine, skills,
+   agents and templates. Transport and translation are taken from an existing tool or kept
+   deliberately thin; they are never a place to invest.
 
 ## Non-goals
 - **Secrets management** — no tokens, keys or credentials stored or distributed. The repo is
@@ -34,6 +40,12 @@ skills, scripts and tool definitions accumulate over time.
   configuration only.
 - **Machine provisioning** — installing runtimes, drivers or hardware setup is out, beyond
   recording machine facts in a per-machine profile.
+- **A general multi-agent config translation or sync engine** — added v0.2 after Phase 1.
+  `AGENTS.md` (Linux Foundation / AAIF) plus MIT tools such as `agentsync` and `agent-dotfiles`
+  already ship this. Rebuilding it duplicates free, maintained, broader software.
+- **Lossless cross-agent translation of skills, hooks and subagents** — added v0.2. Unsolved by
+  every existing tool and not this project's problem to solve. Shim only where a target agent
+  genuinely cannot read the standard.
 - UNSTATED whether team/multi-operator use is excluded. Written as single-operator.
 
 ## Success shape

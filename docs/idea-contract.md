@@ -46,7 +46,7 @@ skills, scripts and tool definitions accumulate over time.
 ## Resolved at lock (defaults accepted)
 - Which agent products must be supported in v1? — resolved to default: Claude Code + Codex +
   one `AGENTS.md`-reading agent. Copilot deferred.
-- Does the rendering step run deterministically, or may it call an LLM?  ·  default:
+- Does the rendering step run deterministically, or may it call an LLM? — resolved to default:
   deterministic in v1; LLM-assisted setup is a later, optional layer.
 - Is the repo to stay public? — resolved to default: yes, with per-machine and personal content
   gitignored, as today.

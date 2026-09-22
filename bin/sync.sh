@@ -36,6 +36,7 @@ STAMP="$(date +%Y%m%d-%H%M%S)"
 
 TARGETS=(
   "claude|$HOME/.claude|CLAUDE.md|import|skills agents commands|restart Claude Code"
+  "codex|${CODEX_HOME:-$HOME/.codex}|AGENTS.md|link|skills|start a new codex session"
 )
 
 field() { printf '%s' "$1" | cut -d'|' -f"$2"; }
@@ -80,6 +81,12 @@ install_one() {
     return 0
   fi
 
+  # A real file here is hand-written content this repo did not create. Never replace one
+  # silently — back it up and say so loudly enough that it can be merged back by hand.
+  if [ -e "$dst" ] && [ ! -L "$dst" ]; then
+    say "WARNING: $dst is not a link. Backing it up; merge anything you still want."
+  fi
+
   if [ -e "$dst" ] || [ -L "$dst" ]; then
     backup "$dst" "$root"
     [ "$DRY" = 1 ] || rm -rf "$dst"
@@ -116,7 +123,9 @@ install_target() {
     install_one "$REPO/home/CLAUDE.md" "$root/$doctrine_path" "$root"
   fi
 
-  if [ ! -e "$root/profile.md" ]; then
+  # profile.md is only reachable by an agent that supports file imports. Seeding it for a
+  # link-mode agent would leave an unread file the operator is invited to maintain.
+  if [ "$doctrine_mode" = import ] && [ ! -e "$root/profile.md" ]; then
     if [ "$DRY" = 1 ]; then
       say "would create $root/profile.md from home/profile.md.example"
     else

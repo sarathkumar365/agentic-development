@@ -25,11 +25,13 @@ if [ ${#missing[@]} -gt 0 ]; then
   exit 1
 fi
 
-if ! have claude; then
-  say "Claude Code not found."
-  say "install it, then re-run this script:"
-  say "  curl -fsSL https://claude.ai/install.sh | bash"
-  say "continuing anyway - config will be in place when you do install it."
+found_agent=0
+have claude && found_agent=1
+have codex  && found_agent=1
+if [ "$found_agent" = 0 ]; then
+  say "no target agent found. Config will be installed anyway and picked up when one is."
+  say "  Claude Code: curl -fsSL https://claude.ai/install.sh | bash"
+  say "  Codex CLI:   npm i -g @openai/codex"
 fi
 
 if ! have gh; then

@@ -67,13 +67,13 @@ rule_duplication() {
 # --- 3. cross-agent reach: every detected target resolves to the same doctrine ------
 
 cross_agent_reach() {
-  local home reached=0 total=0 t id root doctrine
+  local home reached=0 total=0 t root doctrine
   home="$(scratch)"
   HOME="$home" run "$REPO/bin/sync.sh" >/dev/null 2>&1
   # shellcheck source=../lib/targets.sh
   HOME="$home" . "$REPO/lib/targets.sh"
   for t in "${TARGETS[@]}"; do
-    id="$(field "$t" 1)"; root="$(field "$t" 2)"
+    root="$(field "$t" 2)"
     total=$((total + 1))
     doctrine="$(readlink -f "$root/AGENTS.md" 2>/dev/null || true)"
     [ "$doctrine" = "$REPO/AGENTS.md" ] && reached=$((reached + 1))

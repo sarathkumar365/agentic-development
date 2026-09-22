@@ -25,6 +25,7 @@ STAMP="$(date +%Y%m%d-%H%M%S)"
 
 # --- flags -------------------------------------------------------------------------
 
+# shellcheck disable=SC2209  # "link" is a literal mode name, not a command
 MODE=link
 DRY=0
 STATUS=0

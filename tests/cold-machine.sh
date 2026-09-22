@@ -21,6 +21,7 @@ fi
 
 # CODEX_HOME points the codex target inside the container HOME, and both agent roots are
 # pre-created so detection finds them without either CLI being installed.
+# shellcheck disable=SC2016  # this body must expand inside the container, not here
 script='
 set -e
 export HOME=/root

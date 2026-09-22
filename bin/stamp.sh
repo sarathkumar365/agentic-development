@@ -54,6 +54,7 @@ fi
 # Only import-mode agents need one. A link-mode agent reads AGENTS.md directly, so
 # writing anything for it would create the duplicate this system exists to prevent.
 
+# shellcheck disable=SC2153  # TARGETS comes from lib/targets.sh, unrelated to TARGET
 for t in "${TARGETS[@]}"; do
   id="$(field "$t" 1)"
   doctrine_path="$(field "$t" 3)"

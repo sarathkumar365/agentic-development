@@ -14,6 +14,7 @@
 # accepts   space-separated content roles this agent can take. A role the agent has no
 #           equivalent for is skipped, not an error.
 
+# shellcheck disable=SC2034  # consumed by the scripts that source this file
 TARGETS=(
   "claude|$HOME/.claude|CLAUDE.md|import|skills agents commands|restart Claude Code"
   "codex|${CODEX_HOME:-$HOME/.codex}|AGENTS.md|link|skills|start a new codex session"

@@ -50,6 +50,9 @@ Seven items. Each is load-bearing for the wedge in §2.
    changes. Symlinks today; the mechanism is frozen, the implementation is not.
 7. **Project rule stamping** — a command that writes a project's `AGENTS.md` and per-agent shims
    into a target repo.
+8. **Curator** — added v0.3. An agent that reads the repo's uncommitted local changes, proposes
+   what should become a durable skill, agent or doctrine amendment, and commits only what the
+   operator approves. Replaces `capture.sh`, which adopts indiscriminately.
 
 ## 6. Ship criteria
 
@@ -61,6 +64,7 @@ Seven items. Each is load-bearing for the wedge in §2.
 | Drift loss | 0 edits lost | Edit an installed file in each agent's config dir, run install again, run `capture.sh`, confirm the edit is in git history | Per release |
 | Idempotence | Byte-identical tree on re-run | Run installer twice, `diff -r` the two resulting config trees | Per release |
 | Project stamp time | ≤ 30 s to rules-in-effect | Stamp an empty repo, open an agent session in it, confirm project rules apply | Per release |
+| Curated promotion | 0 unapproved commits; ≥ 1 real improvement promoted | Make three local edits, two of them throwaway; run the curator; exactly the durable one is proposed, and nothing is committed without approval | Per release |
 
 **Stratification clause** — bars must hold in the hard conditions, not the average one:
 machine with no prior `~/.claude` or `~/.codex` (cold start); machine that already has a
@@ -105,6 +109,7 @@ Real, deferred, named so they stop leaking in.
 - MCP server definitions synced across agents.
 - LLM-assisted setup that reads the machine and decides what to install.
 - Automatic sync on session start or exit (pull-on-open, push-on-close).
+- Unattended promotion — the curator always proposes, the operator always approves. Added v0.3.
 - Multi-operator or team use.
 - Migrating transport to `agentsync` — revisit when it reaches v1.0.
 - Per-machine conditional content beyond `profile.md`.

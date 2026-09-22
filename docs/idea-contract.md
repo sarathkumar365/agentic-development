@@ -1,6 +1,7 @@
-# Idea Contract — agentic-development v0.2
+# Idea Contract — agentic-development v0.3
 Status: LOCKED  ·  Date: 2026-09-21
 Amended 2026-09-21 after Phase 1 verdict NARROW (see docs/market-landscape.md).
+Amended 2026-09-21 v0.3: promotion into the repo is curated, never automatic.
 
 ## One line
 A git repo that is the single source of truth for how every AI coding agent on every machine the
@@ -25,11 +26,18 @@ skills, scripts and tool definitions accumulate over time.
    and project rules (apply to one repo) are separate inputs with separate lifecycles.
 3. **One idempotent command per machine.** A new machine becomes a configured workstation with a
    single command, re-runnable any time with no manual steps.
-4. **No drift.** Edits made to the installed config while working are repo changes, not a
-   divergent copy that a later sync silently discards.
+4. **No drift, but curated promotion.** Amended v0.3. Installed config is symlinked, so an edit
+   made while working is immediately visible as a change to the repo working tree — nothing is
+   ever silently lost. But nothing reaches the repo's history automatically. A reviewing agent
+   reads the accumulated local changes, decides what is a durable improvement, distils it into a
+   skill, an agent or a doctrine amendment, and commits only that. Raw local noise is never
+   promoted.
 5. **Open-ended hub.** Adding a new skill, script, MCP server or agent definition requires no
    change to the system's structure.
-6. **Content is the asset, plumbing is borrowed.** Added v0.2. Effort goes to doctrine, skills,
+6. **The system improves itself.** Added v0.3. Learning what the operator repeatedly does and
+   turning it into a skill, an agent or a rule is part of the product, not a later nicety. The
+   promotion path in invariant 4 is that mechanism.
+7. **Content is the asset, plumbing is borrowed.** Added v0.2. Effort goes to doctrine, skills,
    agents and templates. Transport and translation are taken from an existing tool or kept
    deliberately thin; they are never a place to invest.
 

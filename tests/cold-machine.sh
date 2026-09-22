@@ -19,13 +19,12 @@ if ! command -v docker >/dev/null 2>&1; then
   exit 0
 fi
 
-# CODEX_HOME points the codex target inside the container HOME, and both agent roots are
-# pre-created so detection finds them without either CLI being installed.
+# Nothing is pre-created. A container with neither CLI installed and no agent directory is
+# the real cold machine, and sync.sh must still lay the config down for both targets.
 # shellcheck disable=SC2016  # this body must expand inside the container, not here
 script='
 set -e
 export HOME=/root
-mkdir -p "$HOME/.claude" "$HOME/.codex"
 start=$(date +%s)
 /repo/bin/sync.sh >/tmp/first.log 2>&1
 elapsed=$(( $(date +%s) - start ))

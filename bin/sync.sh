@@ -11,6 +11,7 @@
 #   sync.sh --dry-run  show what would happen, change nothing
 #   sync.sh --status   report what is linked, copied, diverged or untracked
 #   sync.sh --targets  list target agents and whether each is detected here
+#   sync.sh --all      install for every target, detected or not
 #
 # Anything already at a destination path is backed up to <root>/backups/<timestamp>/
 # before being replaced. Nothing is deleted.
@@ -30,13 +31,15 @@ MODE=link
 DRY=0
 STATUS=0
 LIST=0
+ALL=0
 for arg in "$@"; do
   case "$arg" in
     --copy)    MODE=copy ;;
     --dry-run) DRY=1 ;;
     --status)  STATUS=1 ;;
     --targets) LIST=1 ;;
-    -h|--help) sed -n '2,17p' "$0"; exit 0 ;;
+    --all)     ALL=1 ;;
+    -h|--help) sed -n '2,18p' "$0"; exit 0 ;;
     *) echo "unknown flag: $arg" >&2; exit 2 ;;
   esac
 done
@@ -160,14 +163,22 @@ if [ "$STATUS" = 1 ]; then report_status; exit 0; fi
 say "repo: $REPO"
 say "mode: $MODE"
 
-installed=0
+# On a machine where no agent is installed yet, installing nothing would leave the
+# operator with a configured repo and an unconfigured machine. Lay the config down
+# anyway so the first agent installed picks it up with no second command.
+any_detected=0
 for t in "${TARGETS[@]}"; do
-  if detected "$(field "$t" 2)" "$(field "$t" 1)"; then
+  detected "$(field "$t" 2)" "$(field "$t" 1)" && any_detected=1
+done
+if [ "$any_detected" = 0 ] && [ "$ALL" = 0 ]; then
+  say "no target agent detected - installing for all of them so the first one installed finds it"
+  ALL=1
+fi
+
+for t in "${TARGETS[@]}"; do
+  if [ "$ALL" = 1 ] || detected "$(field "$t" 2)" "$(field "$t" 1)"; then
     install_target "$t"
-    installed=$((installed + 1))
   else
     say "target: $(field "$t" 1) not installed here, skipped"
   fi
 done
-
-[ "$installed" -gt 0 ] || say "no target agents detected on this machine"

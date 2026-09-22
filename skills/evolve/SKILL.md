@@ -16,7 +16,7 @@ new skill is clutter, and a repeated workflow written as a memory is forgotten.
 
 | Learning | Target | Where |
 |---|---|---|
-| A rule about how I should behave, always | Doctrine | `home/CLAUDE.md` |
+| A rule about how I should behave, always | Doctrine | `AGENTS.md` |
 | A fact about this operator or machine | Profile | `~/.claude/profile.md` (never committed) |
 | A repeatable multi-step workflow | New or edited skill | `skills/<name>/SKILL.md` |
 | A read-only audit or research routine | Agent | `agents/<name>.md` |
@@ -43,7 +43,7 @@ Every durable entry carries:
 Check for an existing home first:
 
 ```bash
-grep -rn "<keyword>" ~/agentic-development/home/CLAUDE.md ~/agentic-development/skills/
+grep -rn "<keyword>" ~/agentic-development/AGENTS.md ~/agentic-development/skills/
 ```
 
 Amending an existing rule beats a new file almost every time. A system with forty overlapping
@@ -53,11 +53,15 @@ line why no existing skill covers it.
 ## Step 4 — Commit and propagate
 
 ```bash
-~/agentic-development/bin/capture.sh -m "<conventional commit message>"
+~/agentic-development/bin/capture.sh --commit -m "<conventional commit message>"
 ```
 
-`capture.sh` adopts anything created loose in `~/.claude/`, commits, rebases and pushes. Other
-machines pick it up with `bin/bootstrap.sh`.
+One learning, one commit, one message naming it. `capture.sh` with no flags surveys instead —
+use that when you do not yet know what is worth keeping, or hand the survey to the `curator`
+agent, which classifies everything in the working tree and proposes what to promote. Loose
+content created directly in an agent directory is adopted first with `--adopt <path>`.
+
+There is no path that commits everything with a generated message. That is deliberate.
 
 Commit messages are normal English, Conventional Commits style — they are read by humans later.
 
@@ -77,3 +81,5 @@ Pushed: <commit sha> — live on every machine after bootstrap.sh
 - Never write a rule that only restates a default the model already follows.
 - A rule that has never fired after a month is noise — say so when you notice one.
 - Personal or machine facts go to `profile.md`, which is gitignored. This repo is public.
+- Curating a whole machine's accumulated edits is the `curator` agent's job, not this skill's.
+  This skill promotes one learning you already identified.

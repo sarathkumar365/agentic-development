@@ -20,26 +20,8 @@ set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 
-# --- target agents -----------------------------------------------------------------
-# The only place an agent's own paths are named. A new agent is one more row here and
-# no other edit anywhere.
-#
-#   id | root | doctrine_path | doctrine_mode | accepts | restart_hint
-#
-# doctrine_mode
-#   link    the agent reads AGENTS.md natively; symlink it straight to the source
-#   import  the agent prefers its own filename; install AGENTS.md alongside a stub
-#           that imports it, because an @import resolves next to the importing file
-#
-# accepts   space-separated content roles this agent can take. A role the agent has no
-#           equivalent for is skipped, not an error.
-
-TARGETS=(
-  "claude|$HOME/.claude|CLAUDE.md|import|skills agents commands|restart Claude Code"
-  "codex|${CODEX_HOME:-$HOME/.codex}|AGENTS.md|link|skills|start a new codex session"
-)
-
-field() { printf '%s' "$1" | cut -d'|' -f"$2"; }
+# shellcheck source=../lib/targets.sh
+. "$REPO/lib/targets.sh"
 
 # --- flags -------------------------------------------------------------------------
 
@@ -59,11 +41,6 @@ for arg in "$@"; do
 done
 
 say() { echo "[sync] $*"; }
-
-detected() {
-  local root="$1" id="$2"
-  [ -d "$root" ] || command -v "$id" >/dev/null 2>&1
-}
 
 backup() {
   local path="$1" root="$2"

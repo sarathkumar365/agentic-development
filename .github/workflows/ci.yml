@@ -1,0 +1,30 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # shellcheck is optional on a cold machine by design, so CI is the one place it
+      # is mandatory. Every script must be clean, not merely syntactically valid.
+      - name: shellcheck
+        run: shellcheck bin/*.sh lib/*.sh tests/*.sh
+
+      - name: syntax
+        run: for f in bin/*.sh lib/*.sh tests/*.sh; do bash -n "$f"; done
+
+      # The ship criteria from docs/product-spec-v1.md section 6. A failing bar is a
+      # failing build - that is what stops the numbers becoming decoration.
+      - name: ship criteria
+        run: tests/criteria.sh
+
+      # The runner has docker, so the container stratum runs here even though it skips
+      # on machines that lack it.
+      - name: cold machine stratum
+        run: tests/cold-machine.sh

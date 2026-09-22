@@ -1,57 +1,87 @@
 #!/usr/bin/env bash
-# Link this repo's agent config into ~/.claude/ so the repo IS the live config.
+# Link this repo's agent config into each installed agent's config directory, so the
+# repo IS the live config.
 #
-# Symlinks by default. That makes the sync two-way by construction: editing a skill
-# while working edits the file in this repo, so nothing is ever lost on the next sync.
+# Symlinks by default. That makes local edits visible as repo changes immediately, so
+# nothing written while working is ever lost. Nothing reaches git history on its own —
+# promotion is curated (see docs/idea-contract.md, invariant 4).
 #
 #   sync.sh            symlink (default)
 #   sync.sh --copy     copy instead of symlink (for machines where symlinks are awkward)
 #   sync.sh --dry-run  show what would happen, change nothing
 #   sync.sh --status   report what is linked, copied, diverged or untracked
+#   sync.sh --targets  list target agents and whether each is detected here
 #
-# Anything already at a destination path is backed up to ~/.claude/backups/<timestamp>/
+# Anything already at a destination path is backed up to <root>/backups/<timestamp>/
 # before being replaced. Nothing is deleted.
 
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-DEST="$HOME/.claude"
 STAMP="$(date +%Y%m%d-%H%M%S)"
-BACKUP="$DEST/backups/$STAMP"
+
+# --- target agents -----------------------------------------------------------------
+# The only place an agent's own paths are named. A new agent is one more row here and
+# no other edit anywhere.
+#
+#   id | root | doctrine_path | doctrine_mode | accepts | restart_hint
+#
+# doctrine_mode
+#   link    the agent reads AGENTS.md natively; symlink it straight to the source
+#   import  the agent prefers its own filename; install AGENTS.md alongside a stub
+#           that imports it, because an @import resolves next to the importing file
+#
+# accepts   space-separated content roles this agent can take. A role the agent has no
+#           equivalent for is skipped, not an error.
+
+TARGETS=(
+  "claude|$HOME/.claude|CLAUDE.md|import|skills agents commands|restart Claude Code"
+)
+
+field() { printf '%s' "$1" | cut -d'|' -f"$2"; }
+
+# --- flags -------------------------------------------------------------------------
 
 MODE=link
 DRY=0
 STATUS=0
+LIST=0
 for arg in "$@"; do
   case "$arg" in
     --copy)    MODE=copy ;;
     --dry-run) DRY=1 ;;
     --status)  STATUS=1 ;;
-    -h|--help) sed -n '2,13p' "$0"; exit 0 ;;
+    --targets) LIST=1 ;;
+    -h|--help) sed -n '2,17p' "$0"; exit 0 ;;
     *) echo "unknown flag: $arg" >&2; exit 2 ;;
   esac
 done
 
 say() { echo "[sync] $*"; }
 
+detected() {
+  local root="$1" id="$2"
+  [ -d "$root" ] || command -v "$id" >/dev/null 2>&1
+}
+
 backup() {
-  local path="$1"
+  local path="$1" root="$2"
   { [ -e "$path" ] || [ -L "$path" ]; } || return 0
   if [ "$DRY" = 1 ]; then say "would back up $path"; return 0; fi
-  mkdir -p "$BACKUP"
-  cp -a "$path" "$BACKUP/" 2>/dev/null || true
-  say "backed up $(basename "$path") -> $BACKUP/"
+  mkdir -p "$root/backups/$STAMP"
+  cp -a "$path" "$root/backups/$STAMP/" 2>/dev/null || true
+  say "backed up $(basename "$path") -> $root/backups/$STAMP/"
 }
 
 install_one() {
-  local src="$1" dst="$2"
+  local src="$1" dst="$2" root="$3"
 
   if [ "$MODE" = link ] && [ -L "$dst" ] && [ "$(readlink -f "$dst")" = "$(readlink -f "$src")" ]; then
     return 0
   fi
 
   if [ -e "$dst" ] || [ -L "$dst" ]; then
-    backup "$dst"
+    backup "$dst" "$root"
     [ "$DRY" = 1 ] || rm -rf "$dst"
   fi
 
@@ -62,51 +92,95 @@ install_one() {
   say "$MODE $dst"
 }
 
-report_status() {
-  local src dst rel state
-  printf '%-44s %s\n' "PATH" "STATE"
-  while IFS= read -r -d '' src; do
-    rel="${src#"$REPO"/}"
-    dst="$DEST/$rel"
-    if [ -L "$dst" ] && [ "$(readlink -f "$dst")" = "$(readlink -f "$src")" ]; then state=linked
-    elif [ -e "$dst" ]; then state=copied-or-diverged
-    else state=missing; fi
-    printf '%-44s %s\n' "$rel" "$state"
-  done < <(find "$REPO/skills" "$REPO/agents" "$REPO/commands" -mindepth 1 -maxdepth 1 -print0 2>/dev/null)
+install_target() {
+  local t="$1"
+  local id root doctrine_path doctrine_mode accepts hint group
+  id="$(field "$t" 1)"; root="$(field "$t" 2)"
+  doctrine_path="$(field "$t" 3)"; doctrine_mode="$(field "$t" 4)"
+  accepts="$(field "$t" 5)"; hint="$(field "$t" 6)"
 
-  echo
-  say "untracked in ~/.claude (candidates for capture.sh):"
-  for d in skills agents commands; do
-    [ -d "$DEST/$d" ] || continue
-    find "$DEST/$d" -mindepth 1 -maxdepth 1 ! -type l -printf '  %p\n' 2>/dev/null
+  say "target: $id ($root)"
+
+  for group in $accepts; do
+    [ -d "$REPO/$group" ] || continue
+    [ "$DRY" = 1 ] || mkdir -p "$root/$group"
+    while IFS= read -r -d '' item; do
+      install_one "$item" "$root/$group/$(basename "$item")" "$root"
+    done < <(find "$REPO/$group" -mindepth 1 -maxdepth 1 -print0)
+  done
+
+  # AGENTS.md is the single authored doctrine. In import mode the agent's own file is a
+  # stub beside it; in link mode the agent reads AGENTS.md directly.
+  install_one "$REPO/AGENTS.md" "$root/AGENTS.md" "$root"
+  if [ "$doctrine_mode" = import ]; then
+    install_one "$REPO/home/CLAUDE.md" "$root/$doctrine_path" "$root"
+  fi
+
+  if [ ! -e "$root/profile.md" ]; then
+    if [ "$DRY" = 1 ]; then
+      say "would create $root/profile.md from home/profile.md.example"
+    else
+      cp "$REPO/home/profile.md.example" "$root/profile.md"
+      say "created $root/profile.md (edit it - machine-specific, never committed)"
+    fi
+  fi
+
+  say "$id done. $hint to pick it up."
+}
+
+report_status() {
+  local t id root src dst rel state accepts group
+  for t in "${TARGETS[@]}"; do
+    id="$(field "$t" 1)"; root="$(field "$t" 2)"; accepts="$(field "$t" 5)"
+    detected "$root" "$id" || { say "$id: not installed here, skipped"; continue; }
+
+    echo
+    printf '%-8s %-38s %s\n' "TARGET" "PATH" "STATE"
+    for group in $accepts; do
+      [ -d "$REPO/$group" ] || continue
+      while IFS= read -r -d '' src; do
+        rel="${src#"$REPO"/}"
+        dst="$root/$rel"
+        if [ -L "$dst" ] && [ "$(readlink -f "$dst")" = "$(readlink -f "$src")" ]; then state=linked
+        elif [ -e "$dst" ]; then state=copied-or-diverged
+        else state=missing; fi
+        printf '%-8s %-38s %s\n' "$id" "$rel" "$state"
+      done < <(find "$REPO/$group" -mindepth 1 -maxdepth 1 -print0)
+    done
+
+    echo
+    say "$id: untracked (candidates for curation):"
+    for group in $accepts; do
+      [ -d "$root/$group" ] || continue
+      find "$root/$group" -mindepth 1 -maxdepth 1 ! -type l -printf '  %p\n' 2>/dev/null
+    done
   done
 }
 
+list_targets() {
+  local t id root
+  printf '%-8s %-26s %s\n' "TARGET" "ROOT" "DETECTED"
+  for t in "${TARGETS[@]}"; do
+    id="$(field "$t" 1)"; root="$(field "$t" 2)"
+    if detected "$root" "$id"; then printf '%-8s %-26s %s\n' "$id" "$root" "yes"
+    else printf '%-8s %-26s %s\n' "$id" "$root" "no"; fi
+  done
+}
+
+if [ "$LIST" = 1 ]; then list_targets; exit 0; fi
 if [ "$STATUS" = 1 ]; then report_status; exit 0; fi
 
 say "repo: $REPO"
 say "mode: $MODE"
 
-for group in skills agents commands; do
-  [ -d "$REPO/$group" ] || continue
-  mkdir -p "$DEST/$group"
-  while IFS= read -r -d '' item; do
-    install_one "$item" "$DEST/$group/$(basename "$item")"
-  done < <(find "$REPO/$group" -mindepth 1 -maxdepth 1 -print0)
+installed=0
+for t in "${TARGETS[@]}"; do
+  if detected "$(field "$t" 2)" "$(field "$t" 1)"; then
+    install_target "$t"
+    installed=$((installed + 1))
+  else
+    say "target: $(field "$t" 1) not installed here, skipped"
+  fi
 done
 
-# AGENTS.md holds the doctrine; CLAUDE.md is a stub that imports it. Claude resolves an
-# @import relative to the importing file, so both must land in the same directory.
-install_one "$REPO/AGENTS.md" "$DEST/AGENTS.md"
-install_one "$REPO/home/CLAUDE.md" "$DEST/CLAUDE.md"
-
-if [ ! -e "$DEST/profile.md" ]; then
-  if [ "$DRY" = 1 ]; then
-    say "would create $DEST/profile.md from home/profile.md.example"
-  else
-    cp "$REPO/home/profile.md.example" "$DEST/profile.md"
-    say "created $DEST/profile.md (edit it - machine-specific, never committed)"
-  fi
-fi
-
-say "done. Restart Claude Code to pick up skills and agents."
+[ "$installed" -gt 0 ] || say "no target agents detected on this machine"

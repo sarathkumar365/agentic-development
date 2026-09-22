@@ -95,6 +95,9 @@ for group in skills agents commands; do
   done < <(find "$REPO/$group" -mindepth 1 -maxdepth 1 -print0)
 done
 
+# AGENTS.md holds the doctrine; CLAUDE.md is a stub that imports it. Claude resolves an
+# @import relative to the importing file, so both must land in the same directory.
+install_one "$REPO/AGENTS.md" "$DEST/AGENTS.md"
 install_one "$REPO/home/CLAUDE.md" "$DEST/CLAUDE.md"
 
 if [ ! -e "$DEST/profile.md" ]; then

@@ -1,4 +1,5 @@
 ---
+category: product
 name: market-scout
 description: Fan-out market and competitor research for Phase 1 (market-proof). Runs many parallel searches and returns compressed, cited findings instead of flooding the main context. Read-only. Use when a market question needs more than about six searches.
 tools: WebSearch, WebFetch, Read, Grep, Glob, Bash

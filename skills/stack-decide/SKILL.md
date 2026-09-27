@@ -1,4 +1,5 @@
 ---
+category: product
 name: stack-decide
 description: Phase 3 of the idea pipeline. Choose the technology stack for a specced product — language, runtime, data layer, models, hosting, hardware — each as a decision with rejected alternatives, licence check, and a cost and local-feasibility check against the founder's actual machine. Use after product-spec, or when the user asks "what stack", "what should we build this with", "which model/database/framework".
 ---

@@ -1,4 +1,5 @@
 ---
+category: product
 name: idea-lock
 description: Phase 0 of the idea pipeline. Turn a raw, half-formed idea into a locked one-page Idea Contract — definition, invariants, non-goals, success shape — before any research, expansion, spec or code. Use whenever the user drops a new idea ("I had an idea", "what if we built", "here's a product idea", a pasted concept doc), or when an existing project has drifted and needs its contract restated. Always run this before market-proof, product-spec, stack-decide or block-plan.
 ---

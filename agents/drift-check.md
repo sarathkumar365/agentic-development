@@ -1,4 +1,5 @@
 ---
+category: meta
 name: drift-check
 description: Audits a document, plan, or diff against the project's locked Idea Contract and spec, and reports only violations, silent re-scopes, and unstated assumptions. Read-only. Use before accepting a large plan or spec, or when the founder says "this isn't what I meant".
 tools: Read, Grep, Glob, Bash

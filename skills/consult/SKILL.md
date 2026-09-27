@@ -1,4 +1,5 @@
 ---
+category: engineering
 name: consult
 description: |
   Use when the user wants a senior-engineer thinking partner instead of immediate execution — for new features, bug investigation, repo audits, replanning a current plan, or any decision that needs deliberation. Triggers: "let me consult", "let's consult", "let's plan X", "I want to add Y", "design Z", "this isn't working", "this fails when", "audit the repo", "step back", "rethink", "these findings", "what are my options", "help me think through", "talk through this with me", "I want to understand this fully". Adapts the survey to the mode (feature / bug / audit / replan). Grounds in project conventions (AGENTS.md, Docs/) before discussing. Surfaces trade-offs honestly without prematurely picking the path. Waits for the user to decide before any implementation. Do NOT trigger for direct execution requests where the user just wants the task done.

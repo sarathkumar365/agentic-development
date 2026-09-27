@@ -1,4 +1,5 @@
 ---
+category: product
 name: product-spec
 description: Phase 2 of the idea pipeline. Turn a validated idea into one buildable v1 wedge — vertical, deployment form, scope freeze, non-goals, not-in-v1 list, and falsifiable numeric ship criteria. Decides on the founder's behalf and lists rejected alternatives instead of interrogating. Use after market-proof returns BUILD or NARROW, or when the user asks "what exactly do we build first", "define the MVP", "what's in v1".
 ---

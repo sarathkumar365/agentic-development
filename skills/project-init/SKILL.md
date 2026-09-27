@@ -1,4 +1,5 @@
 ---
+category: product
 name: project-init
 description: Scaffold a new project repository from an idea or a source document — convert the source, write README and docs, add CLAUDE.md, .gitignore and tooling config, init git, create the private GitHub repo and push. Use when the user says "initialize this project", "set up the repo", "make this a project", "start a new project", or drops a concept document and asks to begin.
 ---

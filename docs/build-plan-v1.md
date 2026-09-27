@@ -64,6 +64,33 @@ The B0 contract above is kept, but shrinks to a convention inside `sync.sh` rath
 | B9 | CI — GitHub Actions running `tests/criteria.sh` and `shellcheck` | B6 | A pull request with a shellcheck violation or a failing bar is red | The only place shellcheck is mandatory |
 | B10 | README and docs rewritten to the narrowed idea | B3, B4, B8 | README describes a content library with a thin installer, names `AGENTS.md` as primary, documents curated promotion, and no longer claims to be a general sync engine | The current README sells the thing Phase 1 killed |
 
+## Blocks added 2026-09-25
+
+The operator asked for five things the narrowed v1 did not cover: use-case classification, a way
+to see the configured system, hooks, a bigger skill library, and more target agents. Four are
+blocks; the fifth is content, not code, and is handled below under Blocked.
+
+| ID | Block | Depends on | Done when | Notes |
+|----|-------|-----------|-----------|-------|
+| B11 | Classification — every skill, agent, command and hook declares `category:` in its own header | B1 | `bin/inventory.sh` reports 0 uncategorised items, and adding a category requires editing no index | Contract invariant 5 forbids a registry, so the field lives with the content |
+| B12 | Inventory view — `bin/inventory.sh`, grouped by category, plus `--roles` for per-role and per-target counts | B11, B2 | One command shows every item, its role, its summary and which targets take it | Contract invariant 8 (legibility). This is the "see my system" requirement |
+| B13 | Hooks role — `hooks/` linked like any other role, declared by an additive `jq` merge into the agent's `settings.json` | B2 | Scripts are symlinks, the settings file declares them, a probe payload returns the documented verdict, and every pre-existing settings key survives | Push-to-main deliberately stays a project hook, not a global one |
+| B14 | Third target — Aider, via a new `conf` doctrine mode and a `conf_file` column | B2, B3 | `~/.aider/AGENTS.md` resolves to the repo doctrine and `~/.aider.conf.yml` names it; a hand-written conf is never edited, only reported | Proves the one-row property with an agent that reads no instruction file by default |
+| B15 | Bars and strata for the above, plus the complexity cap split into install-path and inspection budgets in spec §7 (the 700-line raise was retracted) | B11-B14, B6 | `tests/criteria.sh` reports 11 bars; the container stratum asserts the jq-absent path warns rather than fails | The cap raise is written down because the cap exists to catch exactly this growth |
+
+| B16 | Hub page — `bin/report.sh` renders the system as one self-contained read-only HTML file, with a markdown renderer, a file tree and per-file install state | B11, B12 | Every inventory item appears on the page, a scratch `HOME` is byte-identical before and after generating it, and the page opens with no server and no network | Needs spec §10 narrowed from "no GUI" to "no server". Template lives in `web/`, not `bin/`, so the cap measures shell code |
+| B17 | Discovery — report agent directories present on the machine with no row in `lib/targets.sh` | B2 | A known-agent directory with no adapter is listed on the page and by nothing else; no install path ever writes into one | Report, never install: a directory name does not tell you the format |
+
+**Thread 5 — seeing it.**
+B16 → B17.
+Done when: one file, opened from disk, shows every skill's text, every hook's script, which
+agents take each, and what is installed here that nothing supports.
+
+**Thread 4 — the hub as a hub.**
+B11 → B12, and B13 → B14 in parallel, both closing at B15.
+Done when: one command shows the whole configured system grouped by use case, hooks install and
+fire, and three agents read one doctrine.
+
 ## Threads
 
 **Thread 1 — the wedge.**
@@ -89,7 +116,10 @@ the cold-machine case is testable without a container, and B7 adds the container
 ## Blocked
 | Item | Unblocked by |
 |---|---|
-| Two-machine pilot (spec §8) | A second physical machine or a clean VM. B7's container stands in meanwhile; the claim "works on any machine" is not made until the pilot runs |
+| B18 portability | Done 2026-09-27: `rlf`/`sort0` in `lib/targets.sh`, no `find -printf`, no `grep --exclude-dir`; suite green under GNU and BusyBox. Remaining macOS risk is paths and bash 3.2, which only a Mac can settle |
+| Two-machine pilot (spec §8) | A second physical machine or a clean VM. B7's container stands in meanwhile; the claim "works on any machine" is not made until the pilot runs. Container run logged in docs/pilot-log.md |
+| A skill library beyond the idea pipeline (coding, scraping, infra categories) | The operator naming the workflows he actually repeats. The taxonomy and the inventory that will hold them are done; inventing skills for guessed workflows would put untriggerable content in every session's context, which is worse than an empty category |
+| Cursor, Copilot, Windsurf, Gemini CLI targets | One of them being installed on a machine. Each is one row in `lib/targets.sh` |
 | Exactly what Codex reads for skills and commands | Inspecting `~/.codex/skills/` and the installed Codex version during B3. Until then B3 assumes doctrine and skills only |
 
 ## Parked

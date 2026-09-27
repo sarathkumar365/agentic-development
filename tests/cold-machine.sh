@@ -25,13 +25,24 @@ fi
 script='
 set -e
 export HOME=/root
+# rlf stands in for `readlink -f`; sourced here for the same reason the scripts do.
+. /repo/lib/targets.sh
 start=$(date +%s)
 /repo/bin/sync.sh >/tmp/first.log 2>&1
 elapsed=$(( $(date +%s) - start ))
 
-[ "$(readlink -f "$HOME/.claude/AGENTS.md")" = /repo/AGENTS.md ] || { echo "claude doctrine not linked"; exit 1; }
-[ "$(readlink -f "$HOME/.codex/AGENTS.md")"  = /repo/AGENTS.md ] || { echo "codex doctrine not linked"; exit 1; }
+[ "$(rlf "$HOME/.claude/AGENTS.md")" = /repo/AGENTS.md ] || { echo "claude doctrine not linked"; exit 1; }
+[ "$(rlf "$HOME/.codex/AGENTS.md")"  = /repo/AGENTS.md ] || { echo "codex doctrine not linked"; exit 1; }
+[ "$(rlf "$HOME/.aider/AGENTS.md")"  = /repo/AGENTS.md ] || { echo "aider doctrine not linked"; exit 1; }
 [ -L "$HOME/.claude/skills/evolve" ] || { echo "skills not linked"; exit 1; }
+[ -L "$HOME/.claude/hooks/deny-secret-files.sh" ] || { echo "hooks not linked"; exit 1; }
+[ -f "$HOME/.aider.conf.yml" ] || { echo "aider conf not written"; exit 1; }
+
+# The base image has no jq, so hook DECLARATION must degrade to a loud warning rather
+# than a silent skip or a crash. The scripts are still linked; only the wiring waits.
+if ! command -v jq >/dev/null 2>&1; then
+  grep -q "jq absent" /tmp/first.log || { echo "jq-absent path did not warn"; exit 1; }
+fi
 
 grep -qiE "password|sudo|\[y/n\]|press enter" /tmp/first.log && { echo "install prompted"; exit 1; }
 

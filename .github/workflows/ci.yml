@@ -14,10 +14,10 @@ jobs:
       # shellcheck is optional on a cold machine by design, so CI is the one place it
       # is mandatory. Every script must be clean, not merely syntactically valid.
       - name: shellcheck
-        run: shellcheck -e SC1091 bin/*.sh lib/*.sh tests/*.sh
+        run: shellcheck -e SC1091 bin/*.sh lib/*.sh tests/*.sh hooks/*.sh
 
       - name: syntax
-        run: for f in bin/*.sh lib/*.sh tests/*.sh; do bash -n "$f"; done
+        run: for f in bin/*.sh lib/*.sh tests/*.sh hooks/*.sh; do bash -n "$f"; done
 
       # The ship criteria from docs/product-spec-v1.md section 6. A failing bar is a
       # failing build - that is what stops the numbers becoming decoration.
@@ -28,3 +28,13 @@ jobs:
       # on machines that lack it.
       - name: cold machine stratum
         run: tests/cold-machine.sh
+
+      # BusyBox lacks find -printf, sort -z and grep --exclude-dir - the same flags BSD
+      # and macOS lack or spell differently. Running the suite there catches a GNU
+      # assumption on a Linux runner, before a Mac ever sees it.
+      - name: second userland (busybox)
+        run: |
+          docker run --rm -v "$PWD:/repo:ro" alpine:latest sh -c '
+            apk add --no-cache bash jq git >/dev/null 2>&1
+            export HOME=/root
+            cp -r /repo /work && cd /work && bash tests/criteria.sh'

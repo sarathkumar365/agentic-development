@@ -1,4 +1,5 @@
 ---
+category: product
 name: block-plan
 description: Phase 4 of the idea pipeline. Decompose a specced product into independently buildable blocks with a shared schema contract, a dependency table, and ordered build threads each ending in a demoable milestone. Use after stack-decide, or when the user asks "break this into pieces", "what do we build first", "give me the build order", "decompose this".
 ---

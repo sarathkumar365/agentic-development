@@ -1,4 +1,5 @@
 ---
+category: meta
 name: curator
 description: Reads the local changes that have accumulated in the agent config repo and decides which of them deserve to become durable — a skill, an agent, a doctrine amendment — and which are noise. Proposes, never commits on its own. Use when the user says "curate", "what have I changed", "promote what I learned", or before pushing a machine's accumulated edits.
 tools: Read, Grep, Glob, Bash

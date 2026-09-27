@@ -13,6 +13,11 @@
 #   sync.sh --targets  list target agents and whether each is detected here
 #   sync.sh --all      install for every target, detected or not
 #
+# The hooks role is the one piece of content that is not a file drop: hook scripts are
+# linked into the agent's hooks/ dir, and home/settings.hooks.json is merged into the
+# agent's settings.json with jq. The merge is additive and idempotent - it replaces only
+# the entries this repo owns and never touches any other key.
+#
 # Anything already at a destination path is backed up to <root>/backups/<timestamp>/
 # before being replaced. Nothing is deleted.
 
@@ -39,7 +44,7 @@ for arg in "$@"; do
     --status)  STATUS=1 ;;
     --targets) LIST=1 ;;
     --all)     ALL=1 ;;
-    -h|--help) sed -n '2,18p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,22p' "$0"; exit 0 ;;
     *) echo "unknown flag: $arg" >&2; exit 2 ;;
   esac
 done
@@ -58,7 +63,7 @@ backup() {
 install_one() {
   local src="$1" dst="$2" root="$3"
 
-  if [ "$MODE" = link ] && [ -L "$dst" ] && [ "$(readlink -f "$dst")" = "$(readlink -f "$src")" ]; then
+  if [ "$MODE" = link ] && [ -L "$dst" ] && [ "$(rlf "$dst")" = "$(rlf "$src")" ]; then
     return 0
   fi
 
@@ -80,12 +85,84 @@ install_one() {
   say "$MODE $dst"
 }
 
+# declare_hooks <root> <hooks_file> <jq path> - tell one agent which event fires which
+# hook script.
+#
+# The scripts are shared; only the declaration differs per agent, and where it goes is
+# data in lib/targets.sh rather than knowledge in this function. The authored fragment
+# names the hooks directory as __HOOKS_DIR__ so the same file serves every target.
+#
+# Additive and idempotent: an entry is recognised as ours by the script it runs, not by
+# how its path happens to be spelled - an older install may have written $HOME/... where
+# this one writes /home/you/..., and matching on the text would leave both behind.
+# Everything else in the file is left exactly as it was.
+declare_hooks() {
+  local root="$1" rel="$2" path="$3" h
+  local frag="$REPO/home/settings.hooks.json" dst="$root/$rel" tmp
+  [ -f "$frag" ] || return 0
+  [ -n "$rel" ] || return 0
+  if ! command -v jq >/dev/null 2>&1; then
+    say "WARNING: jq absent - hook scripts linked but not declared. Merge $frag into $dst by hand."
+    return 0
+  fi
+  if [ ! -f "$dst" ]; then
+    [ "$DRY" = 1 ] && { say "would create $dst"; return 0; }
+    mkdir -p "$(dirname "$dst")"; echo '{}' > "$dst"
+  fi
+
+  local names
+  names="$(for h in "$REPO"/hooks/*; do [ -f "$h" ] && basename "$h"; done | jq -Rnc '[inputs]')"
+
+  tmp="$(mktemp)"
+  jq --slurpfile frag "$frag" --arg at "$path" --arg dir "$root/hooks" --argjson names "$names" '
+    ($at | if . == "." then [] else ltrimstr(".") | split(".") end) as $p
+    | ($frag[0].hooks
+       | walk(if type == "string" then gsub("__HOOKS_DIR__"; $dir) else . end)) as $ours
+    | reduce ($ours | keys_unsorted)[] as $e (.;
+        setpath($p + [$e];
+          ((getpath($p + [$e]) // [])
+            | map(select(
+                ([.hooks[]?.command // ""]
+                  | any(. as $c | $names | any(. as $n | $c | endswith("/" + $n)))
+                ) | not))
+            | map(select((.hooks // []) | length > 0)))
+          + $ours[$e]))
+  ' "$dst" > "$tmp"
+
+  if cmp -s "$tmp" "$dst"; then rm -f "$tmp"; say "$rel hooks already declared"; return 0; fi
+  if [ "$DRY" = 1 ]; then rm -f "$tmp"; say "would declare hooks in $dst"; return 0; fi
+  backup "$dst" "$root"
+  mv "$tmp" "$dst"
+  say "declared hooks in $dst"
+}
+
+# point_conf_at <doctrine> <conf_file> - make a conf-mode agent read the doctrine.
+#
+# Writes the config file only when this repo owns it. A hand-written config is never
+# edited: the one line to add is printed instead, because guessing at someone's YAML is
+# how a working setup gets broken.
+point_conf_at() {
+  local doctrine="$1" conf="$2" line
+  [ -n "$conf" ] || { say "WARNING: conf mode with no conf_file column - doctrine not wired"; return 0; }
+  line="read: [$doctrine]"
+
+  if [ -f "$conf" ]; then
+    grep -qF "$doctrine" "$conf" && { say "$conf already reads the doctrine"; return 0; }
+    say "WARNING: $conf is hand-written. Add this line yourself:  $line"
+    return 0
+  fi
+  if [ "$DRY" = 1 ]; then say "would create $conf"; return 0; fi
+  printf '# Written by agentic-development/bin/sync.sh. Delete the read: line to opt out.\n%s\n' "$line" > "$conf"
+  say "created $conf pointing at the doctrine"
+}
+
 install_target() {
   local t="$1"
-  local id root doctrine_path doctrine_mode accepts hint group
+  local id root doctrine_path doctrine_mode accepts hint conf hooks_file hooks_path group
   id="$(field "$t" 1)"; root="$(field "$t" 2)"
   doctrine_path="$(field "$t" 3)"; doctrine_mode="$(field "$t" 4)"
-  accepts="$(field "$t" 5)"; hint="$(field "$t" 6)"
+  accepts="$(field "$t" 5)"; hint="$(field "$t" 6)"; conf="$(field "$t" 7)"
+  hooks_file="$(field "$t" 8)"; hooks_path="$(field "$t" 9)"
 
   say "target: $id ($root)"
 
@@ -95,6 +172,8 @@ install_target() {
     while IFS= read -r -d '' item; do
       install_one "$item" "$root/$group/$(basename "$item")" "$root"
     done < <(find "$REPO/$group" -mindepth 1 -maxdepth 1 -print0)
+    # Scripts alone do nothing - the agent has to be told which event fires them.
+    if [ "$group" = hooks ]; then declare_hooks "$root" "$hooks_file" "$hooks_path"; fi
   done
 
   # AGENTS.md is the single authored doctrine. In import mode the agent's own file is a
@@ -103,6 +182,7 @@ install_target() {
   if [ "$doctrine_mode" = import ]; then
     install_one "$REPO/home/CLAUDE.md" "$root/$doctrine_path" "$root"
   fi
+  if [ "$doctrine_mode" = conf ]; then point_conf_at "$root/$doctrine_path" "$conf"; fi
 
   # profile.md is only reachable by an agent that supports file imports. Seeding it for a
   # link-mode agent would leave an unread file the operator is invited to maintain.
@@ -131,7 +211,7 @@ report_status() {
       while IFS= read -r -d '' src; do
         rel="${src#"$REPO"/}"
         dst="$root/$rel"
-        if [ -L "$dst" ] && [ "$(readlink -f "$dst")" = "$(readlink -f "$src")" ]; then state=linked
+        if [ -L "$dst" ] && [ "$(rlf "$dst")" = "$(rlf "$src")" ]; then state=linked
         elif [ -e "$dst" ]; then state=copied-or-diverged
         else state=missing; fi
         printf '%-8s %-38s %s\n' "$id" "$rel" "$state"
@@ -142,7 +222,7 @@ report_status() {
     say "$id: untracked (candidates for curation):"
     for group in $accepts; do
       [ -d "$root/$group" ] || continue
-      find "$root/$group" -mindepth 1 -maxdepth 1 ! -type l -printf '  %p\n' 2>/dev/null
+      find "$root/$group" -mindepth 1 -maxdepth 1 ! -type l 2>/dev/null | sed 's/^/  /' 
     done
   done
 }

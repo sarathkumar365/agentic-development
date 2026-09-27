@@ -15,6 +15,10 @@ REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VERBOSE=0
 [ "${1:-}" = "-v" ] && VERBOSE=1
 
+# Sourced for rlf/sort0 - the portability helpers every bar below relies on.
+# shellcheck source=../lib/targets.sh
+. "$REPO/lib/targets.sh"
+
 PASS=0
 FAIL=0
 
@@ -23,6 +27,21 @@ FAIL=0
 CANARY="Direction drift is my top complaint"
 
 scratch() { mktemp -d "${TMPDIR:-/tmp}/criteria.XXXXXX"; }
+
+# fingerprint <dir> - path, type and link destination of everything under dir, so a
+# re-run that changed nothing checksums identically. Written without `find -printf`,
+# which BSD find does not have, so the bar measures the same thing on macOS.
+fingerprint() {
+  ( cd "$1" 2>/dev/null || return 0
+    find . -path ./.claude/backups -prune -o -path ./.codex/backups -prune -o -print 2>/dev/null \
+    | LC_ALL=C sort \
+    | while IFS= read -r f; do
+        if [ -L "$f" ]; then printf '%s L %s\n' "$f" "$(readlink "$f")"
+        elif [ -d "$f" ]; then printf '%s d\n' "$f"
+        else printf '%s f %s\n' "$f" "$(cksum < "$f" 2>/dev/null)"
+        fi
+      done ) | cksum
+}
 
 bar() {
   local name="$1" measured="$2" ok="$3"
@@ -44,7 +63,7 @@ cold_machine() {
   home="$(scratch)"
   start=$(date +%s)
   if HOME="$home" run "$REPO/bin/sync.sh" >/dev/null 2>&1; then
-    doctrine="$(readlink -f "$home/.claude/AGENTS.md" 2>/dev/null || true)"
+    doctrine="$(rlf "$home/.claude/AGENTS.md" 2>/dev/null || true)"
     [ "$doctrine" = "$REPO/AGENTS.md" ] && ok=1
   fi
   elapsed=$(( $(date +%s) - start ))
@@ -58,8 +77,15 @@ cold_machine() {
 rule_duplication() {
   local hits
   # tests/ is excluded because this harness necessarily names the canary to search for it.
-  hits=$(grep -rl --exclude-dir=.git --exclude-dir=backups --exclude-dir=tests \
-           -F "$CANARY" "$REPO" 2>/dev/null | wc -l)
+  # hub.html is excluded because it is generated and gitignored: it quotes the doctrine to
+  # display it, the way an installed symlink resolves to it. The bar counts AUTHORED copies.
+  #
+  # Selection is done by find rather than `grep --exclude-dir`, which BSD grep spells the
+  # same way but BusyBox does not have at all - and a search that errors reports zero hits,
+  # which would read as a passing-looking failure.
+  hits=$(find "$REPO" -type f \
+           ! -path '*/.git/*' ! -path '*/backups/*' ! -path '*/tests/*' \
+           ! -name hub.html -exec grep -lF "$CANARY" {} + 2>/dev/null | wc -l)
   bar "rule duplication" "$hits authored copies (bar: exactly 1)" \
       "$([ "$hits" -eq 1 ] && echo 1 || echo 0)"
 }
@@ -75,7 +101,7 @@ cross_agent_reach() {
   for t in "${TARGETS[@]}"; do
     root="$(field "$t" 2)"
     total=$((total + 1))
-    doctrine="$(readlink -f "$root/AGENTS.md" 2>/dev/null || true)"
+    doctrine="$(rlf "$root/AGENTS.md" 2>/dev/null || true)"
     [ "$doctrine" = "$REPO/AGENTS.md" ] && reached=$((reached + 1))
   done
   bar "cross-agent reach" "$reached of $total targets on one doctrine" \
@@ -95,7 +121,7 @@ drift_loss() {
   probe="$home/.claude/skills/evolve/SKILL.md"
   if [ -L "$home/.claude/skills/evolve" ] && [ -w "$probe" ]; then
     # writing through the link must land on the repo file, not a copy
-    [ "$(readlink -f "$probe")" = "$REPO/skills/evolve/SKILL.md" ] && ok=1
+    [ "$(rlf "$probe")" = "$REPO/skills/evolve/SKILL.md" ] && ok=1
   fi
   bar "drift loss" "$([ "$ok" = 1 ] && echo "0 edits lost - live file is the repo file" || echo "edit would not reach the repo")" "$ok"
   rm -rf "$home"
@@ -107,9 +133,9 @@ idempotence() {
   local home a b ok=0
   home="$(scratch)"
   HOME="$home" run "$REPO/bin/sync.sh" >/dev/null 2>&1
-  a="$(cd "$home" && find . -path ./.claude/backups -prune -o \( -printf '%p %y ' -print0 \) 2>/dev/null | sort | cksum)"
+  a="$(fingerprint "$home")"
   HOME="$home" "$REPO/bin/sync.sh" >/dev/null 2>&1
-  b="$(cd "$home" && find . -path ./.claude/backups -prune -o \( -printf '%p %y ' -print0 \) 2>/dev/null | sort | cksum)"
+  b="$(fingerprint "$home")"
   [ "$a" = "$b" ] && ok=1
   bar "idempotence" "$([ "$ok" = 1 ] && echo "identical tree on re-run" || echo "tree changed on re-run")" "$ok"
   rm -rf "$home"
@@ -159,6 +185,113 @@ stratum_handwritten() {
   rm -rf "$home"
 }
 
+# --- 8. hooks reach: scripts linked, declared, and actually firing ------------------
+
+hooks_reach() {
+  local home ok=1 verdict
+  home="$(scratch)"
+  HOME="$home" run "$REPO/bin/sync.sh" >/dev/null 2>&1
+
+  # every target that accepts hooks, not just the one they were authored against
+  local t id root hf hp n=0
+  HOME="$home" . "$REPO/lib/targets.sh"
+  for t in "${TARGETS[@]}"; do
+    case " $(field "$t" 5) " in *" hooks "*) ;; *) continue ;; esac
+    id="$(field "$t" 1)"; root="$(field "$t" 2)"
+    hf="$(field "$t" 8)"; hp="$(field "$t" 9)"
+    n=$((n + 1))
+    [ -L "$root/hooks/deny-secret-files.sh" ] || ok=0
+    # declared, so the agent knows when to fire them - and pointing at ITS hooks dir
+    if command -v jq >/dev/null 2>&1; then
+      jq -e --arg at "$hp" --arg dir "$root/hooks" '
+        ($at | if . == "." then [] else ltrimstr(".") | split(".") end) as $p
+        | [getpath($p + ["PreToolUse"])[]?.hooks[]?.command]
+        | length >= 3 and all(startswith($dir))' "$root/$hf" >/dev/null 2>&1 || ok=0
+    fi
+  done
+  [ "$n" -ge 2 ] || ok=0
+  . "$REPO/lib/targets.sh"
+  # and the script has to return the deny the declaration promises
+  verdict="$(echo '{"tool_input":{"file_path":"/x/.env"}}' | "$REPO/hooks/deny-secret-files.sh" 2>/dev/null)"
+  case "$verdict" in *'"deny"'*) ;; *) ok=0 ;; esac
+
+  bar "hooks reach" "$([ "$ok" = 1 ] && echo "3 hooks live in $n of $n hook-taking targets" || echo "hooks not installed or not firing")" "$ok"
+  rm -rf "$home"
+}
+
+# --- 9. content is classified: every item declares a category ----------------------
+
+content_classified() {
+  local loose
+  loose="$("$REPO/bin/inventory.sh" 2>/dev/null | awk '/^== uncategorised/{f=1;next} /^== /{f=0} f && /^  [a-z]/' | wc -l)"
+  bar "content classified" "$loose uncategorised items (bar: 0)" \
+      "$([ "$loose" -eq 0 ] && echo 1 || echo 0)"
+}
+
+# --- stratum: a hand-written settings key survives the hook merge -------------------
+
+stratum_settings() {
+  local home ok=1
+  home="$(scratch)"
+  mkdir -p "$home/.claude"
+  printf '{"theme":"dark","enabledPlugins":{"mine":true}}\n' > "$home/.claude/settings.json"
+  HOME="$home" run "$REPO/bin/sync.sh" >/dev/null 2>&1
+  if command -v jq >/dev/null 2>&1; then
+    jq -e '.theme == "dark" and .enabledPlugins.mine == true and (.hooks.PreToolUse | length) > 0' \
+      "$home/.claude/settings.json" >/dev/null 2>&1 || ok=0
+  fi
+  bar "stratum: settings merge" "$([ "$ok" = 1 ] && echo "existing keys kept, hooks added" || echo "a hand-written settings key was lost")" "$ok"
+  rm -rf "$home"
+}
+
+# --- 10. report coverage: the page shows everything the inventory lists ------------
+
+report_coverage() {
+  local out listed shown ok=0
+  if ! command -v jq >/dev/null 2>&1; then
+    bar "report coverage" "skipped - jq absent (report.sh is an inspection tool, not the installer)" 1
+    return
+  fi
+  out="$(mktemp -d)/hub.html"
+  "$REPO/bin/report.sh" --out "$out" >/dev/null 2>&1
+  listed="$("$REPO/bin/inventory.sh" | grep -c '^  [a-z]' || true)"
+  shown="$(grep '^const DATA = {' "$out" | sed 's/^const DATA = //; s/;$//' \
+           | jq '[.files[] | select(.role=="skills" or .role=="agents" or .role=="commands" or .role=="hooks")] | length')"
+  # A skill directory can hold more files than the one line inventory prints for it, so
+  # the page may show more; it must never show fewer.
+  [ "$shown" -ge "$listed" ] && ok=1
+  bar "report coverage" "$shown of $listed inventory items on the page (bar: all)" "$ok"
+  rm -rf "$(dirname "$out")"
+}
+
+# --- 11. report is read-only: it writes one file and touches no config -------------
+
+report_read_only() {
+  local home out before after ok=1
+  home="$(scratch)"
+  HOME="$home" "$REPO/bin/sync.sh" >/dev/null 2>&1
+  before="$(cd "$home" && find . -newer "$home" -o -print | sort | cksum)"
+  out="$home/hub.html"
+  HOME="$home" "$REPO/bin/report.sh" --out "$out" >/dev/null 2>&1
+  [ -f "$out" ] || ok=0
+  rm -f "$out"
+  after="$(cd "$home" && find . -newer "$home" -o -print | sort | cksum)"
+  [ "$before" = "$after" ] || ok=0
+  bar "report read-only" "$([ "$ok" = 1 ] && echo "wrote 1 file, changed no config" || echo "the report touched config")" "$ok"
+  rm -rf "$home"
+}
+
+# --- 12. complexity cap: the install path stays small enough to trust ---------------
+
+complexity_cap() {
+  local install inspect ok=1
+  install="$(cat "$REPO"/bin/bootstrap.sh "$REPO"/bin/sync.sh "$REPO"/bin/stamp.sh "$REPO"/lib/*.sh | wc -l)"
+  inspect="$(cat "$REPO"/bin/inventory.sh "$REPO"/bin/report.sh "$REPO"/bin/capture.sh | wc -l)"
+  [ "$install" -le 500 ] || ok=0
+  [ "$inspect" -le 500 ] || ok=0
+  bar "complexity cap" "install $install/500, inspection $inspect/500" "$ok"
+}
+
 echo "Ship criteria - docs/product-spec-v1.md section 6"
 echo
 cold_machine
@@ -168,7 +301,13 @@ drift_loss
 idempotence
 project_stamp
 curated_promotion
+hooks_reach
+content_classified
+report_coverage
+report_read_only
+complexity_cap
 stratum_handwritten
+stratum_settings
 echo
 echo "$PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

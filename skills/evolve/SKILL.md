@@ -1,4 +1,5 @@
 ---
+category: meta
 name: evolve
 description: Turn something learned in this session into a durable change to the agent system — a new skill, an amended doctrine rule, a corrected default, or a project invariant — then commit and push it so every machine gets it. Use when the user says "remember this", "don't do that again", "add this to the system", "make this permanent", "/evolve", or after correcting the same behaviour twice.
 ---

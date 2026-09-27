@@ -1,7 +1,8 @@
-# Idea Contract — agentic-development v0.3
+# Idea Contract — agentic-development v0.4
 Status: LOCKED  ·  Date: 2026-09-21
 Amended 2026-09-21 after Phase 1 verdict NARROW (see docs/market-landscape.md).
 Amended 2026-09-21 v0.3: promotion into the repo is curated, never automatic.
+Amended 2026-09-25 v0.4: the hub is browsable, and content declares its own use case.
 
 ## One line
 A git repo that is the single source of truth for how every AI coding agent on every machine the
@@ -33,7 +34,18 @@ skills, scripts and tool definitions accumulate over time.
    skill, an agent or a doctrine amendment, and commits only that. Raw local noise is never
    promoted.
 5. **Open-ended hub.** Adding a new skill, script, MCP server or agent definition requires no
-   change to the system's structure.
+   change to the system's structure. Strengthened v0.4: this rules out a central registry or
+   index of content. Anything the system needs to know about an item — including which use case
+   it belongs to — is declared in that item's own header and read from there.
+8. **The hub is legible.** Added v0.4. The operator must be able to see what his configured
+   system consists of, grouped by use case, without reading the tree by hand. A hub that can only
+   be installed and not inspected is a dotfiles repo again. Extended v0.4: legibility may take
+   the form of a generated page as well as terminal output, but it is always *generated* — a
+   view of the repo, never a second place the truth lives, and never something that can change
+   the system.
+9. **Nothing installs into a format nobody verified.** Added v0.4. Support for an agent is a
+   deliberate declaration of what that agent reads. Finding a directory is evidence a directory
+   exists and nothing more, so discovery reports and only reports.
 6. **The system improves itself.** Added v0.3. Learning what the operator repeatedly does and
    turning it into a skill, an agent or a rule is part of the product, not a later nicety. The
    promotion path in invariant 4 is that mechanism.
@@ -61,6 +73,8 @@ skills, scripts and tool definitions accumulate over time.
   with no chat-level re-instruction.
 - A standing instruction is written in one file and takes effect in every agent product.
 - A skill built while working on machine A is present on machine B without a manual copy step.
+- One command answers "what is in my system, and where does each piece land" — in the terminal,
+  or as a page that opens from disk with nothing running.
 - Starting a new project applies its rules without re-deriving them.
 
 ## Resolved at lock (defaults accepted)

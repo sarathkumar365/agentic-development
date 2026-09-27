@@ -1,4 +1,5 @@
 ---
+category: product
 name: new-idea
 description: Orchestrator for taking a raw idea all the way to a scaffolded repo with a build plan — runs idea-lock, market-proof, product-spec, stack-decide, block-plan and project-init in order, with an approval gate between each phase. Use when the user drops a new product idea and wants it turned into a project ("I had an idea", "let's build X", "turn this into a project", "/new-idea"), or wants to resume a partially completed pipeline.
 ---

@@ -1,4 +1,5 @@
 ---
+category: product
 name: market-proof
 description: Phase 1 of the idea pipeline. Prove or kill an idea against the real market — what already ships, what is commodity, what the regulatory constraints are, where a real gap survives — and end with an explicit BUILD / NARROW / KILL verdict. Use after idea-lock, or when the user asks "does this already exist", "who are the competitors", "is this worth building", "validate this idea". Never run before the Idea Contract is LOCKED.
 ---

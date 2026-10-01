@@ -1,9 +1,0 @@
-{
-  "name": "agentic-development",
-  "version": "0.3.0",
-  "description": "Phase-gated idea-to-product pipeline, drift auditing, and project scaffolding for Claude Code and Codex CLI.",
-  "author": {
-    "name": "Sarath Kumar",
-    "url": "https://github.com/sarathkumar365"
-  }
-}

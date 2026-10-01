@@ -8,8 +8,7 @@ project skeleton. The plumbing under it is deliberately thin — the installer i
 of bash, and is capped there — because
 [`AGENTS.md`](https://developers.openai.com/codex/guides/agents-md) is now an open standard that
 most agents read directly, and cross-agent sync engines already exist under MIT. Rebuilding
-either would be duplicating free software. See [docs/market-landscape.md](docs/market-landscape.md)
-for the evidence and the resulting NARROW verdict.
+either would be duplicating free software.
 
 ## Install on a new machine
 
@@ -19,12 +18,6 @@ curl -fsSL https://raw.githubusercontent.com/sarathkumar365/agentic-development/
 
 Clones the repo, links it into every agent it finds, creates a per-machine `profile.md`, and
 reports anything still missing. Idempotent — re-run it any time.
-
-Lighter alternative, skills and agents only, no doctrine or templates:
-
-```bash
-claude plugin marketplace add sarathkumar365/agentic-development
-```
 
 ## How it works
 
@@ -48,7 +41,7 @@ Adding an agent is one row in [`lib/targets.sh`](lib/targets.sh) and no other ed
 
 | Agent | Config root | Doctrine lands as | Takes |
 |---|---|---|---|
-| Claude Code | `~/.claude` | `CLAUDE.md` importing `AGENTS.md` | skills, agents, commands, hooks |
+| Claude Code | `~/.claude` | `CLAUDE.md` importing `AGENTS.md` | skills, agents, hooks |
 | Codex CLI | `$CODEX_HOME` or `~/.codex` | `AGENTS.md` by direct symlink | skills |
 | Aider | `~/.aider` | `AGENTS.md`, named by `~/.aider.conf.yml` | — |
 
@@ -68,7 +61,6 @@ agentic-development/
 ├── lib/targets.sh               # the agents installed into, and their paths
 ├── skills/                      # → each agent's skills directory
 ├── agents/                      # → ~/.claude/agents/
-├── commands/                    # → ~/.claude/commands/
 ├── hooks/                       # → ~/.claude/hooks/, declared in settings.json
 ├── home/
 │   ├── CLAUDE.md                # a stub importing AGENTS.md and profile.md
@@ -149,7 +141,7 @@ into architecture inside the same reply.
 | 4 Blocks | `block-plan` | `docs/build-plan-v1.md` | Start B0? |
 | 5 Init | `project-init` | repo + private GitHub remote | Build B0? |
 
-`new-idea` orchestrates all six. This repo's own `docs/` are the output of running it on itself.
+`new-idea` orchestrates all six.
 
 ### Other skills
 
@@ -204,10 +196,10 @@ Promotion is two deliberate steps, never one:
 
 ```bash
 bin/capture.sh --adopt ~/.claude/skills/new-thing
-bin/capture.sh --commit -m "feat(skills): add new-thing"
+bin/capture.sh --commit -m "feat(skills): add new-thing" skills/new-thing
 ```
 
-There is no flag that commits everything under a generated message. Ask the `curator` agent to
+There is no flag that commits everything — every commit names its paths. Ask the `curator` agent to
 read the survey when you do not yet know what is worth keeping.
 
 Skills and agents load at session start — restart the agent after syncing.
@@ -219,7 +211,7 @@ tests/criteria.sh       # the ship criteria, with measured values
 tests/cold-machine.sh   # a container with neither agent installed (skips without docker)
 ```
 
-Fourteen bars, from [docs/product-spec-v1.md](docs/product-spec-v1.md) §6, enforced in CI: time
+Fourteen bars, enforced in CI: time
 to a configured cold machine, exactly one authored copy of any rule, every target on one
 doctrine, zero edits lost, a byte-identical tree on re-run, project rules in effect within 30
 seconds, zero unapproved commit paths, every hook linked and declared and firing, zero
@@ -229,19 +221,19 @@ backed up, and a hand-written `settings.json` key survives the hook merge.
 
 Portability: the suite runs under GNU and BusyBox userlands, so the GNU-only flags
 (`readlink -f`, `sort -z`, `find -printf`, `grep --exclude-dir`) are gone. macOS itself is
-still unproven — see [docs/pilot-log.md](docs/pilot-log.md) for what to record there.
+still unproven.
 
 Still unproven: the two-machine pilot. The container covers the cold-start case, but "works on
 any machine" is not claimed until this has been installed from zero on a second physical
-machine. Runs so far are logged in [docs/pilot-log.md](docs/pilot-log.md).
+machine.
 
 ## Conventions
 
-- Anything in `skills/`, `agents/`, `commands/`, `hooks/` must be **portable across projects**.
+- Anything in `skills/`, `agents/`, `hooks/` must be **portable across projects**.
   Refer to convention paths (`AGENTS.md`, `docs/`) relatively, and handle their absence gracefully.
 - Every item declares `category:` in its header — YAML frontmatter for a document, a leading
-  `# category:` comment for a script. There is no index file, by design: contract invariant 5
-  says adding content must not require a structural edit.
+  `# category:` comment for a script. There is no index file, by design: invariant 5 in
+  [docs/architecture.md](docs/architecture.md) says adding content must not require a structural edit.
 - Anything tied to one codebase belongs in that project's own config, not here.
 - `templates/` files stay self-contained and language-agnostic.
 - `hub.html` is generated. Never edit it — change `web/hub.template.html` or the content it

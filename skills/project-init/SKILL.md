@@ -84,7 +84,7 @@ Claude-specific. Do not duplicate content between them.
 <test command, lint command, how to run, layout rules>
 ```
 
-`~/agentic-development/templates/project-skeleton/init.sh` stamps both, plus the `Docs/` tree and
+`~/agentic-development/bin/stamp.sh` stamps both, plus the `Docs/` tree and
 safety hooks. Run it rather than hand-writing them.
 
 ## Step 5 — Git and remote

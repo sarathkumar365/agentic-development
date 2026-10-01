@@ -4,7 +4,7 @@
 #
 # Symlinks by default. That makes local edits visible as repo changes immediately, so
 # nothing written while working is ever lost. Nothing reaches git history on its own —
-# promotion is curated (see docs/idea-contract.md, invariant 4).
+# promotion is curated (see docs/architecture.md, invariant 4).
 #
 #   sync.sh            symlink (default)
 #   sync.sh --copy     copy instead of symlink (for machines where symlinks are awkward)

@@ -21,17 +21,8 @@ missing=()
 for tool in git curl; do have "$tool" || missing+=("$tool"); done
 if [ ${#missing[@]} -gt 0 ]; then
   say "missing required tools: ${missing[*]}"
-  say "install them and re-run. Debian/Ubuntu: sudo apt install ${missing[*]}"
+  say "install them and re-run."
   exit 1
-fi
-
-found_agent=0
-have claude && found_agent=1
-have codex  && found_agent=1
-if [ "$found_agent" = 0 ]; then
-  say "no target agent found. Config will be installed anyway and picked up when one is."
-  say "  Claude Code: curl -fsSL https://claude.ai/install.sh | bash"
-  say "  Codex CLI:   npm i -g @openai/codex"
 fi
 
 if ! have gh; then
@@ -42,34 +33,30 @@ fi
 # --- 2. the repo ------------------------------------------------------------
 if [ -d "$REPO_DIR/.git" ]; then
   say "repo present at $REPO_DIR - pulling"
-  git -C "$REPO_DIR" pull --ff-only || say "pull skipped (local changes or no network)"
+  git -C "$REPO_DIR" pull --ff-only \
+    || say "WARNING: pull failed - installing from $(git -C "$REPO_DIR" rev-parse --short HEAD), which may be behind origin"
 else
   say "cloning into $REPO_DIR"
   git clone "$REPO_URL" "$REPO_DIR"
 fi
 
-# --- 3. link config into ~/.claude -----------------------------------------
-"$REPO_DIR/bin/sync.sh"
-
-# --- 4. per-machine profile -------------------------------------------------
-PROFILE="$HOME/.claude/profile.md"
-if [ -f "$PROFILE" ] && ! grep -q "RTX 2070" "$PROFILE" 2>/dev/null; then
-  say "profile.md already customised - left alone"
-else
-  say "profile.md is at $PROFILE - edit it with THIS machine's hardware and accounts"
-  if have nvidia-smi; then
-    say "detected GPU: $(nvidia-smi --query-gpu=name,memory.total --format=csv,noheader 2>/dev/null | head -1)"
-  fi
-  if have free; then
-    say "detected RAM: $(free -g | awk '/^Mem:/{print $2" GB"}')"
-  fi
+# A clone from before AGENTS.md became the doctrine has a different layout, and its own
+# sync.sh would install that old system. Refuse rather than install it quietly.
+if [ ! -f "$REPO_DIR/AGENTS.md" ] || [ ! -f "$REPO_DIR/lib/targets.sh" ]; then
+  say "$REPO_DIR is an old layout of this repo. Move it aside, or set AGENTIC_DIR to a current clone."
+  exit 1
 fi
 
-# --- 5. convenience ---------------------------------------------------------
+# --- 3. link config into every detected agent --------------------------------
+# Which agents exist, and where their config lives, is lib/targets.sh's knowledge, not
+# this script's. sync.sh also seeds profile.md for agents that can import it.
+"$REPO_DIR/bin/sync.sh"
+
+# --- 4. next steps ---------------------------------------------------------
 say ""
 say "done. Next:"
-say "  1. Edit $PROFILE with this machine's specs."
-say "  2. Restart Claude Code so skills and agents load."
-say "  3. Verify with: claude --version && ls ~/.claude/skills"
+say "  1. Edit ~/.claude/profile.md with this machine's specs (gitignored, never committed)."
+say "  2. Restart each agent so skills and agents load."
+say "  3. Verify with: $REPO_DIR/bin/inventory.sh --roles"
 say ""
 say "To push improvements back:  $REPO_DIR/bin/capture.sh"

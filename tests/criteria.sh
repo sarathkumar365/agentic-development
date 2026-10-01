@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The ship criteria from docs/product-spec-v1.md section 6, as executable checks.
+# The ship criteria, as executable checks.
 #
 # Each bar prints its measured value, not just a verdict, so a regression shows as a
 # number moving rather than a check flipping. Everything runs against a scratch HOME,
@@ -90,12 +90,15 @@ rule_duplication() {
       "$([ "$hits" -eq 1 ] && echo 1 || echo 0)"
 }
 
-# --- 3. cross-agent reach: every detected target resolves to the same doctrine ------
+# --- 3. cross-agent reach: every declared target resolves to the same doctrine ------
+#
+# --all, because detection also looks at PATH: on a machine with some agents installed a
+# plain run skips the rest, and the bar would measure this machine rather than the repo.
 
 cross_agent_reach() {
   local home reached=0 total=0 t root doctrine
   home="$(scratch)"
-  HOME="$home" run "$REPO/bin/sync.sh" >/dev/null 2>&1
+  HOME="$home" run "$REPO/bin/sync.sh" --all >/dev/null 2>&1
   # shellcheck source=../lib/targets.sh
   HOME="$home" . "$REPO/lib/targets.sh"
   for t in "${TARGETS[@]}"; do
@@ -161,11 +164,32 @@ project_stamp() {
 
 # --- 7. curated promotion: no path commits without an explicit message --------------
 
+# Runs against a scratch repo holding a copy of capture.sh, so a regression here commits
+# into that copy and never into this repo.
 curated_promotion() {
-  local out ok=0
-  out="$("$REPO/bin/capture.sh" --commit 2>&1 || true)"
-  case "$out" in *"needs -m"*) ok=1 ;; esac
-  bar "curated promotion" "$([ "$ok" = 1 ] && echo "0 unapproved commit paths" || echo "capture.sh committed without a message")" "$ok"
+  local r out head ok=1
+  r="$(scratch)"
+  mkdir -p "$r/bin" "$r/lib"
+  cp "$REPO/bin/capture.sh" "$r/bin/"; cp "$REPO/lib/targets.sh" "$r/lib/"
+  ( cd "$r" && git init -q . && git add -A && git -c user.name=t -c user.email=t@t commit -qm init ) >/dev/null 2>&1
+  echo chosen > "$r/chosen"; echo noise > "$r/noise"
+  head="$(git -C "$r" rev-parse HEAD)"
+
+  # no message, and a message with no paths, must both refuse and commit nothing
+  out="$("$r/bin/capture.sh" --commit 2>&1 || true)"
+  case "$out" in *"needs -m"*) ;; *) ok=0 ;; esac
+  out="$("$r/bin/capture.sh" --commit -m sweep 2>&1 || true)"
+  case "$out" in *"needs the paths"*) ;; *) ok=0 ;; esac
+  [ "$(git -C "$r" rev-parse HEAD)" = "$head" ] || ok=0
+
+  # a named path commits that path and leaves the rest of the dirty tree alone
+  ( cd "$r" && GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@t \
+      bin/capture.sh --commit -m chosen chosen ) >/dev/null 2>&1
+  [ "$(git -C "$r" show --name-only --format= HEAD)" = chosen ] || ok=0
+  [ -n "$(git -C "$r" status --porcelain -- noise)" ] || ok=0
+
+  bar "curated promotion" "$([ "$ok" = 1 ] && echo "0 unapproved commit paths, 0 swept files" || echo "capture.sh committed what nobody chose")" "$ok"
+  rm -rf "$r"
 }
 
 # --- strata: hand-written agent files are never destroyed ---------------------------
@@ -193,11 +217,11 @@ hooks_reach() {
   HOME="$home" run "$REPO/bin/sync.sh" >/dev/null 2>&1
 
   # every target that accepts hooks, not just the one they were authored against
-  local t id root hf hp n=0
+  local t root hf hp n=0
   HOME="$home" . "$REPO/lib/targets.sh"
   for t in "${TARGETS[@]}"; do
     case " $(field "$t" 5) " in *" hooks "*) ;; *) continue ;; esac
-    id="$(field "$t" 1)"; root="$(field "$t" 2)"
+    root="$(field "$t" 2)"
     hf="$(field "$t" 8)"; hp="$(field "$t" 9)"
     n=$((n + 1))
     [ -L "$root/hooks/deny-secret-files.sh" ] || ok=0
@@ -209,7 +233,7 @@ hooks_reach() {
         | length >= 3 and all(startswith($dir))' "$root/$hf" >/dev/null 2>&1 || ok=0
     fi
   done
-  [ "$n" -ge 2 ] || ok=0
+  [ "$n" -ge 1 ] || ok=0
   . "$REPO/lib/targets.sh"
   # and the script has to return the deny the declaration promises
   verdict="$(echo '{"tool_input":{"file_path":"/x/.env"}}' | "$REPO/hooks/deny-secret-files.sh" 2>/dev/null)"
@@ -270,12 +294,12 @@ report_read_only() {
   local home out before after ok=1
   home="$(scratch)"
   HOME="$home" "$REPO/bin/sync.sh" >/dev/null 2>&1
-  before="$(cd "$home" && find . -newer "$home" -o -print | sort | cksum)"
+  before="$(fingerprint "$home")"
   out="$home/hub.html"
   HOME="$home" "$REPO/bin/report.sh" --out "$out" >/dev/null 2>&1
   [ -f "$out" ] || ok=0
   rm -f "$out"
-  after="$(cd "$home" && find . -newer "$home" -o -print | sort | cksum)"
+  after="$(fingerprint "$home")"
   [ "$before" = "$after" ] || ok=0
   bar "report read-only" "$([ "$ok" = 1 ] && echo "wrote 1 file, changed no config" || echo "the report touched config")" "$ok"
   rm -rf "$home"
@@ -292,7 +316,7 @@ complexity_cap() {
   bar "complexity cap" "install $install/500, inspection $inspect/500" "$ok"
 }
 
-echo "Ship criteria - docs/product-spec-v1.md section 6"
+echo "Ship criteria"
 echo
 cold_machine
 rule_duplication

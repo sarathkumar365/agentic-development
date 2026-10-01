@@ -127,7 +127,7 @@ one_file() {
   esac
   cat="$(declared "$path" category)"; [ -n "$cat" ] || cat="$fallback"
   sum="$(declared "$path" description)"
-  [ "$sum" = "|" ] && sum="$(sed -n '/^description: |/{n;p;q}' "$path" | sed 's/^ *//')"
+  [ "$sum" = "|" ] && sum="$(sed -n '/^description: |/{n;p;q;}' "$path" | sed 's/^ *//')"
   [ -n "$sum" ] || sum="$(awk 'NR>1 && /^#/ { s=$0; sub(/^# */,"",s);
         if (s !~ /^[a-z_]+:/ && s != "") { print s; exit } } !/^#/ && NR>1 { exit }' "$path")"
 

@@ -76,7 +76,7 @@ message:
 
 ```bash
 bin/capture.sh --adopt ~/.claude/skills/foo     # loose content only
-bin/capture.sh --commit -m "feat(foo): retry on transient failure"
+bin/capture.sh --commit -m "feat(foo): retry on transient failure" skills/foo
 ```
 
 Stop there. Run nothing until the operator picks.

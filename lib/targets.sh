@@ -21,9 +21,12 @@
 #            the jq path inside it that holds the declaration. Hook scripts are
 #            inert until the agent is told which event fires them, and every agent keeps
 #            that declaration somewhere different: Claude Code nests it under `.hooks` in
-#            settings.json, Codex keeps it at the top level of hooks/hooks.json. Both read
-#            the same event names (PreToolUse, PostToolUse, SessionStart, ...) and the same
-#            decision schema, so one authored hook script serves both.
+#            settings.json. The scripts emit Claude Code's decision schema, so only a
+#            target verified to read that schema gets this column.
+#
+# Codex takes skills only. Its agent and hook formats are unverified against an installed
+# Codex (docs/architecture.md, invariant 9), so linking Claude-format agents or hooks there would be
+# writing into a format nobody checked. Widen the row once one has been.
 #
 # accepts   space-separated content roles this agent can take. A role the agent has no
 #           equivalent for is skipped, not an error.
@@ -31,7 +34,7 @@
 # shellcheck disable=SC2034  # consumed by the scripts that source this file
 TARGETS=(
   "claude|$HOME/.claude|CLAUDE.md|import|skills agents commands hooks|restart Claude Code||settings.json|.hooks"
-  "codex|${CODEX_HOME:-$HOME/.codex}|AGENTS.md|link|skills agents hooks|start a new codex session||hooks/hooks.json|."
+  "codex|${CODEX_HOME:-$HOME/.codex}|AGENTS.md|link|skills|start a new codex session|||"
   "aider|$HOME/.aider|AGENTS.md|conf||start a new aider session|$HOME/.aider.conf.yml||"
 )
 

@@ -19,7 +19,7 @@ jobs:
       - name: syntax
         run: for f in bin/*.sh lib/*.sh tests/*.sh hooks/*.sh; do bash -n "$f"; done
 
-      # The ship criteria from docs/product-spec-v1.md section 6. A failing bar is a
+      # The ship criteria in tests/criteria.sh. A failing bar is a
       # failing build - that is what stops the numbers becoming decoration.
       - name: ship criteria
         run: tests/criteria.sh

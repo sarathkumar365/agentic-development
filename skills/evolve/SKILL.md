@@ -54,7 +54,7 @@ line why no existing skill covers it.
 ## Step 4 — Commit and propagate
 
 ```bash
-~/agentic-development/bin/capture.sh --commit -m "<conventional commit message>"
+~/agentic-development/bin/capture.sh --commit -m "<conventional commit message>" <path>...
 ```
 
 One learning, one commit, one message naming it. `capture.sh` with no flags surveys instead —

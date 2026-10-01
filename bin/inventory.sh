@@ -85,7 +85,7 @@ collect() {
         cat="$(meta "$file" category)"
         sum="$(meta "$file" description)"
         # A block description (`description: |`) puts the text on the next lines.
-        [ "$sum" = "|" ] && sum="$(sed -n '/^description: |/{n;p;q}' "$file" | sed 's/^ *//')"
+        [ "$sum" = "|" ] && sum="$(sed -n '/^description: |/{n;p;q;}' "$file" | sed 's/^ *//')"
         # A hook is a script, not a document: its first plain header comment is the summary.
         [ -z "$sum" ] && sum="$(awk 'NR>1 && /^#/ { s=$0; sub(/^# */,"",s);
               if (s !~ /^[a-z_]+:/ && s != "") { print s; exit } } !/^#/ && NR>1 { exit }' "$file")"

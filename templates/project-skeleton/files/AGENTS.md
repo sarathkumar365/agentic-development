@@ -10,8 +10,7 @@ Agents working in this repo (Claude Code, Copilot, Codex, Cursor, etc.) should r
 
 ## Rules reference
 
-- **Documentation layout:** `Docs/README.md` — index + "where does this go?" routing guide. Consult before creating any new folder/file under `Docs/`.
-- **Implementation/structure rules:** `developer-rules.md` (if present)
+- **Documentation:** `Docs/README.md` — where project docs go.
 
 ## Branch strategy
 
@@ -21,7 +20,7 @@ Agents working in this repo (Claude Code, Copilot, Codex, Cursor, etc.) should r
 
 ## Spec adherence and scope discipline
 
-- When a written spec exists (a doc under `Docs/features/<slug>/` or a `Docs/repo-decisions/RD-*.md`), the spec is the source of truth.
+- When a written spec exists (a doc under `Docs/`), the spec is the source of truth.
 - Re-read the relevant spec before editing behavior governed by it.
 - Surface deviations from a spec **explicitly, in-conversation**, before shipping them.
 - "Fix X" means fix X. Don't widen scope to "also improve Y" without raising it as a separate item.

@@ -6,7 +6,7 @@ Lightweight tracker for defects. GitHub Issues is the source of truth — this f
 
 - **One row per GitHub issue.** If a bug recurs, do not add a new row — reopen the issue (or open a new one that references the old one) and append the new PR to the same row.
 - **Status values:** `Open`, `In progress`, `Fixed`, `Wontfix`, `Duplicate`.
-- **Keep the description to one line.** Long investigations or postmortems go in `deep-dive/` and link from the row.
+- **Keep the description to one line.** Long investigations or postmortems get their own file in `Docs/` and are linked from the row.
 - **Sort newest at the top** (most recent issue number first).
 
 ## Open / in progress
@@ -23,4 +23,4 @@ Lightweight tracker for defects. GitHub Issues is the source of truth — this f
 
 ## When a bug needs more than one line
 
-If a defect needs a real investigation (multiple fix attempts, regression analysis, postmortem), write it up in `deep-dive/` as `YYYY-MM-DD-<slug>.md` and link it from the Notes column above.
+If a defect needs a real investigation (multiple fix attempts, regression analysis, postmortem), write it up in `Docs/` as `YYYY-MM-DD-<slug>.md` and link it from the Notes column above.

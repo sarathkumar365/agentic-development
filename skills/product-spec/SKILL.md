@@ -1,7 +1,7 @@
 ---
 category: product
 name: product-spec
-description: Phase 2 of the idea pipeline. Turn a validated idea into one buildable v1 wedge — vertical, deployment form, scope freeze, non-goals, not-in-v1 list, and falsifiable numeric ship criteria. Decides on the founder's behalf and lists rejected alternatives instead of interrogating. Use after market-proof returns BUILD or NARROW, or when the user asks "what exactly do we build first", "define the MVP", "what's in v1".
+description: Phase 2 of the idea pipeline. Turn a validated idea into one buildable v1 wedge — vertical, deployment form, scope freeze, non-goals, not-in-v1 list, and falsifiable numeric ship criteria. Brings options and a recommendation for each decision; the founder picks. Use after market-proof returns BUILD or NARROW, or when the user asks "what exactly do we build first", "define the MVP", "what's in v1".
 ---
 
 # Phase 2 — Product Spec
@@ -9,19 +9,20 @@ description: Phase 2 of the idea pipeline. Turn a validated idea into one builda
 Purpose: collapse a validated idea into exactly one thing to build, with numbers that decide
 whether it worked.
 
-**Input:** locked `docs/idea-contract.md` + `docs/market-landscape.md` with verdict BUILD or NARROW.
+**Input:** locked `Docs/idea-contract.md` + `Docs/market-landscape.md` with verdict BUILD or NARROW.
 
 **Hard rule: no libraries, no frameworks, no repo layout in this phase.** That is Phase 3.
 Hardware class is in scope only where it is a product constraint (bandwidth, on-prem, offline).
 
 ## The decision method
 
-Decide. Do not interrogate. For every decision below, produce:
+These are design decisions, so the founder makes them. For every decision below, produce:
 
-> **Decision** — one line. **Why** — one line. **Rejected** — each alternative plus the reason it lost.
+> **Options** — two or three, one line each with its trade-off. **Recommendation** — one, with
+> one line of why. **Rejected** — why the others lose.
 
-Founders veto faster than they answer questionnaires. A wrong decision that is written down and
-reversed in one line costs less than five questions that stall the project for a day.
+A row that is cheap to reverse (a name, an order, a default) may be decided outright and marked
+`(decided)` for the founder to veto.
 
 Ask only what the founder alone knows, tagged `[BLOCKING]`, capped at 5, each with a default.
 
@@ -48,7 +49,7 @@ fail is not a bar.
 | <name> | <number + unit> | <method> | <e.g. 30-day rolling> |
 
 Add a **stratification clause**: the bars must hold in the hard conditions, not the average ones
-(night, rain, low bandwidth, cold start, empty account, worst device). Failing a stratum means not
+(low bandwidth, cold start, empty account, worst device, peak load). Failing a stratum means not
 shipped.
 
 One of these metrics is the company. Name which, and say why.
@@ -64,7 +65,7 @@ Carry all three forward into every later document.
 
 ## Output
 
-Write `docs/product-spec-v1.md`:
+Write `Docs/product-spec-v1.md`:
 
 ```markdown
 # Product Spec v1 — <name>
@@ -90,9 +91,9 @@ Then replace any open-decisions section in `README.md` with the answers, and com
 ## Gate
 
 Present §0, §2, §6 and §11 first — value, wedge, bars, and what is excluded. Ask:
-**"Veto anything, or go to stack?"**
+**"Pick each open row, or take the recommendations?"**
 
-Silence on a decision means accepted. Proceed to Phase 3 (`stack-decide`) only after this gate.
+No open row is accepted until the founder says so; `(decided)` rows stand unless vetoed. Proceed to Phase 3 (`stack-decide`) only after this gate.
 
 ## Discipline
 

@@ -59,8 +59,8 @@ only when the task in front of the agent needs it. The layers are that mechanism
 |---|---|---|---|---|
 | 1 | **Core** — `AGENTS.md` | How the operator works on every task: response depth and tone, decide vs ask, minimal code, correct with evidence, explain the why. The routing principle. | Every session | All agents |
 | 2 | **Flows** — `skills/<flow>/SKILL.md` | How one kind of task runs: its steps, its depth, its gates, when it asks and when it decides. `feature`, `debug`, `refactor`, `review`, `explain`, `new-project`, `validate-idea`. | When the task matches the flow's description | All agents that read skills |
-| 3 | **Domain knowledge** — `skills/<flow>/reference/<topic>.md` | Language and framework conventions: TypeScript, Python, React. | Only when that language or framework is involved | All agents that read skills |
-| 4 | **Project** — `<project>/AGENTS.md` and `<project>/docs/` | That project's commands, architecture and conventions. | Inside that project; the nearest file wins | All agents |
+| 3 | **Domain knowledge** — `skills/stack-conventions/reference/<topic>.md` | Language and framework defaults and pitfalls: Java, Python, TypeScript, React, PostgreSQL. One shared skill, so every flow uses the same file. | Only when that language or framework is involved | All agents that read skills |
+| 4 | **Project** — `<project>/AGENTS.md` and `<project>/Docs/` | That project's commands, architecture and conventions. | Inside that project; the nearest file wins | All agents |
 | 5 | **Enforcement** — hooks, linters, tests | What must hold no matter what the model decides: no secret-file reads, no destructive git, code passes lint and tests. | Always, automatically | Per agent (hooks are agent-specific) |
 | 6 | **Learning loop** — `evolve`, `learn`, `evals/`, `curator` | How the other five improve: capture a miss, propose a change to the right layer, prove it with an eval, operator approves, sync. | On demand, or weekly | All agents |
 
@@ -112,7 +112,7 @@ The core does not keep a table of flows. Invariant 5 rules out a central index o
 item declares what it is for in its own header. So routing works the way
 skills already work. Every flow's `description` says what task it handles and what phrases
 trigger it. The agent picks the flow whose description matches the task. When none matches, the
-task is treated as quick: act, verify, report in one line.
+agent picks the depth from the core's depth table: quick, standard or deep.
 
 The core states that principle in a few lines. It never lists the flows. Adding a flow therefore
 needs no edit to the core.
@@ -123,9 +123,9 @@ Ask in order and stop at the first yes.
 
 1. Must it hold every time, whatever the model decides? → **Layer 5.** Write a hook, a lint rule
    or a test.
-2. Is it true of one project only? → **Layer 4.** That project's `AGENTS.md` or `docs/`.
-3. Is it about one language or framework? → **Layer 3.** A reference file under the flow that
-   needs it.
+2. Is it true of one project only? → **Layer 4.** That project's `AGENTS.md` or `Docs/`.
+3. Is it about one language or framework? → **Layer 3.** That language's file under
+   `skills/stack-conventions/reference/`.
 4. Is it about how one kind of task runs? → **Layer 2.** That flow's `SKILL.md`.
 5. Does it apply to every task in every project? → **Layer 1.** The core — and only if it earns
    its place against the budget below.
@@ -136,7 +136,7 @@ If it fits none of these, it is not a rule yet. Leave it out.
 
 | Layer | Limit | Why |
 |---|---|---|
-| Core | under 80 lines | It loads into every session and competes with everything else |
+| Core | 80 lines max | It loads into every session and competes with everything else |
 | Flow `SKILL.md` | under 500 lines | Anthropic's skill guidance; split into reference files past that |
 | Reference files | one level deep from `SKILL.md` | Agents may read nested references only partially |
 | Project `AGENTS.md` | under 200 lines | Claude Code's guidance for a single instruction file |
@@ -162,12 +162,12 @@ where enforcement is agent-specific by nature.
 | Piece | State |
 |---|---|
 | Sync to every agent and machine | built |
-| Core `AGENTS.md` | built, but over-scoped: it carries the idea pipeline and scope guards, which belong in a flow |
-| Flows | idea pipeline only (`idea-lock` … `project-init`, `new-idea`); no coding flows yet |
-| Domain knowledge | none |
+| Core `AGENTS.md` | built, 80 lines (at budget) |
+| Flows | `feature`, `consult`, and the idea pipeline (`idea-lock` … `project-init`, `new-idea`); `debug`, `refactor`, `review`, `explain` not built |
+| Domain knowledge | `stack-conventions`: Java, Python, TypeScript, React, PostgreSQL |
 | Project layer | built (`bin/stamp.sh`) |
 | Enforcement | three hooks for Claude Code |
-| Learning loop | `evolve`, `capture.sh` and `curator` built; `learn` and `evals/` not built |
+| Learning loop | `evolve`, `capture.sh` and `curator` built; `evals/feature.json` written, no runner yet; `learn` not built |
 
 ## Sources
 

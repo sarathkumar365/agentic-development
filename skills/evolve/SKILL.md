@@ -13,17 +13,23 @@ correction, a discovery, or a repeated friction into a tracked change in
 ## Step 1 — Classify what was learned
 
 Pick exactly one target. Wrong target is the common failure: a one-off preference written as a
-new skill is clutter, and a repeated workflow written as a memory is forgotten.
+new skill is clutter, a repeated workflow written as a memory is forgotten, and one project's
+detail written into a global file misleads every other project.
 
-| Learning | Target | Where |
-|---|---|---|
-| A rule about how I should behave, always | Doctrine | `AGENTS.md` |
-| A fact about this operator or machine | Profile | `~/.claude/profile.md` (never committed) |
-| A repeatable multi-step workflow | New or edited skill | `skills/<name>/SKILL.md` |
-| A read-only audit or research routine | Agent | `agents/<name>.md` |
-| A constraint true only for one project | Project instructions | that repo's `CLAUDE.md` |
-| A fact about one project's history | Memory | that project's memory dir |
-| A default that turned out wrong | Edit in place | wherever it was stated |
+Ask in order and stop at the first yes (the test in `docs/architecture.md`):
+
+| # | Question | Target | Where |
+|---|---|---|---|
+| 0 | Is it a fact about this operator or machine? | Profile | `~/.claude/profile.md` (never committed) |
+| 1 | Must it hold every time, whatever the model decides? | Enforcement | a hook, lint rule or test |
+| 2 | Is it true of one project only? | Project | that repo's `AGENTS.md` or `Docs/` |
+| 3 | Is it about one language or framework? | Domain knowledge | `skills/stack-conventions/reference/<lang>.md` |
+| 4 | Is it about how one kind of task runs? | Flow | `skills/<name>/SKILL.md`, or `agents/<name>.md` if read-only |
+| 5 | Does it apply to every task in every project? | Core | `AGENTS.md`, within its budget |
+
+A default that turned out wrong is edited where it was stated. Before writing to a global file
+(questions 1, 3, 4, 5), strip every project name, machine spec, account and example that only one
+project would recognise.
 
 If it fits nowhere, it is not a learning yet. Say so instead of inventing a home for it.
 
@@ -51,7 +57,9 @@ Amending an existing rule beats a new file almost every time. A system with fort
 skills is worse than one with eight sharp ones. If a new skill is genuinely warranted, say in one
 line why no existing skill covers it.
 
-## Step 4 — Commit and propagate
+## Step 4 — Show, then commit and propagate
+
+Show the operator the rule, its target and the diff. Commit only after an explicit yes.
 
 ```bash
 ~/agentic-development/bin/capture.sh --commit -m "<conventional commit message>" <path>...

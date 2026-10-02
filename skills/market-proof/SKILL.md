@@ -9,7 +9,7 @@ description: Phase 1 of the idea pipeline. Prove or kill an idea against the rea
 Purpose: find out whether the locked idea needs to exist, before any spec or code. Ends in a
 verdict, not a report.
 
-**Input:** `docs/idea-contract.md` with `Status: LOCKED`. If it is missing or unlocked, run
+**Input:** `Docs/idea-contract.md` with `Status: LOCKED`. If it is missing or unlocked, run
 `idea-lock` first.
 
 **Hard rule: no architecture, no tech stack, no build plan in this phase.** Naming a technology is
@@ -81,10 +81,10 @@ Rules:
 Present the verdict first, then the evidence. Ask: **"Accept the verdict, or challenge it?"**
 
 - **BUILD** → Phase 2 (`product-spec`).
-- **NARROW** → amend `docs/idea-contract.md` with the narrower scope, re-lock, then Phase 2.
-- **KILL** → stop. Write `docs/market-landscape.md` anyway; a killed idea's research is reusable.
+- **NARROW** → amend `Docs/idea-contract.md` with the narrower scope, re-lock, then Phase 2.
+- **KILL** → stop. Write `Docs/market-landscape.md` anyway; a killed idea's research is reusable.
 
-Write the file to `docs/market-landscape.md` regardless of verdict. Commit it.
+Write the file to `Docs/market-landscape.md` regardless of verdict. Commit it.
 
 ## Discipline
 

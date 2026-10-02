@@ -18,7 +18,7 @@ Read whatever the user gave you — a sentence, a voice-note transcript, a `.doc
 Extract only what is actually there. Where something essential is missing, write `UNSTATED` rather
 than filling it with a plausible guess. `UNSTATED` fields are what you are allowed to ask about.
 
-If a source document exists, convert and keep it verbatim at `docs/source/` before summarising it.
+If a source document exists, convert and keep it verbatim at `Docs/source/` before summarising it.
 The founder's own words are the tiebreaker in every later argument.
 
 ## Step 2 — Write the Idea Contract
@@ -71,7 +71,7 @@ did not. This is the founder's chance to say "actually, go there". Example shape
 Ask one question: **"Lock this, or amend it?"**
 
 - Amendments are applied to the contract, not argued with.
-- On lock: flip `Status: LOCKED`, write to `docs/idea-contract.md`, commit it if the repo exists.
+- On lock: flip `Status: LOCKED`, write to `Docs/idea-contract.md`, commit it if the repo exists.
 - Only after LOCKED may Phase 1 (`market-proof`) start.
 
 ## Enforcement for the rest of the project

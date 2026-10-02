@@ -2,7 +2,7 @@
 category: engineering
 name: consult
 description: |
-  Use when the user wants a senior-engineer thinking partner instead of immediate execution — for new features, bug investigation, repo audits, replanning a current plan, or any decision that needs deliberation. Triggers: "let me consult", "let's consult", "let's plan X", "I want to add Y", "design Z", "this isn't working", "this fails when", "audit the repo", "step back", "rethink", "these findings", "what are my options", "help me think through", "talk through this with me", "I want to understand this fully". Adapts the survey to the mode (feature / bug / audit / replan). Grounds in project conventions (AGENTS.md, Docs/) before discussing. Surfaces trade-offs honestly without prematurely picking the path. Waits for the user to decide before any implementation. Do NOT trigger for direct execution requests where the user just wants the task done.
+  Use when the user wants a senior-engineer thinking partner instead of immediate execution — for new features, bug investigation, repo audits, replanning a current plan, or any decision that needs deliberation. Triggers: "let me consult", "let's consult", "let's plan X", "design Z", "this isn't working", "this fails when", "audit the repo", "step back", "rethink", "these findings", "what are my options", "help me think through", "talk through this with me", "I want to understand this fully". Adapts the survey to the mode (feature / bug / audit / replan). Grounds in project conventions (AGENTS.md, Docs/) before discussing. Surfaces trade-offs honestly without prematurely picking the path. Waits for the user to decide before any implementation. Do NOT trigger for direct execution requests where the user just wants the task done — a feature to build goes to the feature skill.
 ---
 
 # Consult — Senior Domain-Expert Mode
@@ -29,7 +29,7 @@ This is the step that decides whether the rest of the routine is useful or noise
 
 Pick **one**:
 
-- **FEATURE** — they're starting, scoping, or designing something new. Signals: "let's plan X", "I want to add Y", "design Z", "how should I structure...", "new feature for...".
+- **FEATURE** — they're starting, scoping, or designing something new. Signals: "let's plan X", "design Z", "how should I structure...", "new feature for...".
 - **BUG** — something's broken. Signals: "this fails when", "I keep getting", "doesn't work", "broken since", "regression".
 - **AUDIT** — they want a sweep for issues across the repo or a subsystem. Signals: "audit", "what's wrong with", "scan for issues", "what should we fix", "overall health".
 - **REPLAN** — they're reconsidering a plan or recent work in flight. Signals: "step back", "rethink", "these findings", "we need to reset", "let's replan".
@@ -57,12 +57,10 @@ Before the survey, state your reading: *"Mode: BUG. Scope: SCOPED to `WorkflowDu
 
 Read whichever exist (skip the rest, note what was missing):
 
-- `AGENTS.md`, `developer-rules.md` — project conventions and constraints
+- `AGENTS.md` — project conventions and constraints
 - `Docs/README.md` — doc layout
 - `Docs/bugs.md` — known defects
-- `Docs/repo-decisions/` — binding architectural decisions
-- `Docs/deep-dive/README.md` — system overview if present
-- `Docs/features/<slug>/`, `Docs/initiatives/`, `Docs/runbooks/` if relevant to the scope
+- `Docs/*.md` — any topic doc relevant to the scope (architecture, decisions, plans)
 - `git log -10 --oneline` — recent activity
 
 ### 1b. Survey, tailored to the detected mode
@@ -72,10 +70,10 @@ Read whichever exist (skip the rest, note what was missing):
 Ask yourself (and the user, where you don't know):
 - **User need** — what problem does this solve, for whom, why now?
 - **In/out of scope** — what's the smallest version that delivers the value? What's explicitly NOT in v1?
-- **Existing patterns** — does the codebase already do something similar (`Docs/features/`, similar modules)? Reuse before invent.
+- **Existing patterns** — does the codebase already do something similar (`Docs/`, similar modules)? Reuse before invent.
 - **Edge cases** — what cases will probably break v1? Which are worth handling, which are deferred?
 - **6-month implications** — does this lock in a schema, API contract, or vendor dependency that's hard to undo?
-- **Constraint check** — does this conflict with any `Docs/repo-decisions/` `Accepted` decision?
+- **Constraint check** — does this conflict with a decision already recorded in `AGENTS.md` or `Docs/`?
 
 #### BUG mode
 
@@ -85,7 +83,7 @@ Ask yourself (and the user, where you don't know):
 - **Reproduction** — can you reliably trigger it? What's the minimal repro?
 - **Root cause hypothesis** — cite `file:line` if you can, or "needs investigation: <what's missing>"
 - **Blast radius** — what else in the codebase or product is affected by the same defect or fix?
-- **History** — is this in `Docs/bugs.md` already? Similar past bugs in `Docs/deep-dive/`?
+- **History** — is this in `Docs/bugs.md` already? Similar past bugs written up in `Docs/`?
 - **Layer** — UI / API / business logic / data / external integration — where does the bug actually live?
 
 #### AUDIT mode (broad sweep)
@@ -135,7 +133,7 @@ Don't dump a flat list of "what should we do" questions. Instead:
 
 Use AskUserQuestion for constrained choices. Use plain text for open dialogue. **Discussion over interrogation.**
 
-## Step 4 — Present options, not a recommendation
+## Step 4 — Present options, then a recommendation
 
 For each finding (or for a group that shares a decision), lay out:
 
@@ -143,7 +141,7 @@ For each finding (or for a group that shares a decision), lay out:
 - **Path B** — same
 - **What you'd NOT be doing** under each path, and what that costs
 
-Use a table when there are 3+ paths. Be honest when one path is clearly better — say it explicitly — but **don't force a choice** when the answer depends on context only the user has.
+Use a table when there are 3+ paths. Then give your recommendation and one line of why. When the answer depends on context only the user has, name that context and what each answer would change, instead of a recommendation. Either way, **the user makes the choice**.
 
 ## Step 5 — Synthesize once they've decided
 
@@ -153,11 +151,11 @@ The deliverable is a **written artifact** that lives in the `Docs/` tree at a pr
 
 | Mode | Artifact | Lives at |
 |---|---|---|
-| **FEATURE** | Phased implementation plan + phase tracker | `Docs/features/<slug>/plan.md` + `phases.md` |
+| **FEATURE** | Phased implementation plan with phase tracker | `Docs/<slug>.md` |
 | **BUG** (simple, localized fix) | New row in bug ledger + fix outline | `Docs/bugs.md` |
-| **BUG** (non-trivial — multi-file, regression, racey) | Deep-dive write-up + phased fix plan | `Docs/deep-dive/YYYY-MM-DD-<slug>.md` |
-| **AUDIT** | Audit report (findings + prioritized actions) | `Docs/audits/<topic>-audit-YYYY-MM-DD.md` |
-| **REPLAN** | Revised existing plan with changelog at top | `Docs/features/<slug>/plan.md` (in place) |
+| **BUG** (non-trivial — multi-file, regression, racey) | Write-up + phased fix plan, linked from `Docs/bugs.md` | `Docs/<slug>.md` |
+| **AUDIT** | Audit report (findings + prioritized actions) | `Docs/<topic>-audit-YYYY-MM-DD.md` |
+| **REPLAN** | Revised existing plan with changelog at top | `Docs/<slug>.md` (in place) |
 
 ### When to phase, when not to
 
@@ -188,7 +186,7 @@ If unsure, lean phased. The cost of phasing trivial work is small; the cost of u
 - **Explicit non-goals** — what's deferred and why
 - **Risks** with mid-flight detection signals
 - **Validation criteria** — how we know it worked
-- **Linked decisions** — which `Docs/repo-decisions/` apply; which need to be created
+- **Linked decisions** — which recorded decisions apply; which need to be written down
 
 Plans should be tight. Bullets, not paragraphs — unless a trade-off needs nuance.
 
@@ -229,4 +227,4 @@ Neither side has enough context alone. Together you decide.
 
 ## Portability
 
-This skill assumes a project layout convention (`AGENTS.md` at root, `Docs/` tree with `bugs.md` / `repo-decisions/` / `deep-dive/` / `features/`). When invoked in a project that lacks some of those, just read what exists and proceed — don't refuse to operate. Note in Step 1a what was missing so the user knows what context you're working without.
+This skill assumes a project layout convention (`AGENTS.md` at root, `Docs/` with `bugs.md` and one file per topic). When invoked in a project that lacks some of those, just read what exists and proceed — don't refuse to operate. Note in Step 1a what was missing so the user knows what context you're working without.

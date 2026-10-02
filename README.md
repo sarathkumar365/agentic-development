@@ -123,7 +123,7 @@ as `uncategorised`, which `tests/criteria.sh` fails on.
 
 ### Doctrine — `AGENTS.md`
 
-Response style, decide-don't-interrogate, anti-drift, phase discipline, scope guards. Read by
+Purpose, response style, depth, ask or decide, engineering, truth, drift, routing. Read by
 every agent, on every project. Personal and machine facts live in `profile.md`, which is
 gitignored — this repo is public.
 
@@ -134,11 +134,11 @@ into architecture inside the same reply.
 
 | Phase | Skill | Artefact | Gate |
 |---|---|---|---|
-| 0 Lock | `idea-lock` | `docs/idea-contract.md` | Lock this, or amend it? |
-| 1 Proof | `market-proof` | `docs/market-landscape.md` | BUILD / NARROW / KILL |
-| 2 Spec | `product-spec` | `docs/product-spec-v1.md` | Veto anything? |
-| 3 Stack | `stack-decide` | `docs/stack-v1.md` | Veto any row? |
-| 4 Blocks | `block-plan` | `docs/build-plan-v1.md` | Start B0? |
+| 0 Lock | `idea-lock` | `Docs/idea-contract.md` | Lock this, or amend it? |
+| 1 Proof | `market-proof` | `Docs/market-landscape.md` | BUILD / NARROW / KILL |
+| 2 Spec | `product-spec` | `Docs/product-spec-v1.md` | Pick each open row |
+| 3 Stack | `stack-decide` | `Docs/stack-v1.md` | Pick each open row |
+| 4 Blocks | `block-plan` | `Docs/build-plan-v1.md` | Start B0? |
 | 5 Init | `project-init` | repo + private GitHub remote | Build B0? |
 
 `new-idea` orchestrates all six.
@@ -230,7 +230,7 @@ machine.
 ## Conventions
 
 - Anything in `skills/`, `agents/`, `hooks/` must be **portable across projects**.
-  Refer to convention paths (`AGENTS.md`, `docs/`) relatively, and handle their absence gracefully.
+  Refer to convention paths (`AGENTS.md`, `Docs/`) relatively, and handle their absence gracefully.
 - Every item declares `category:` in its header — YAML frontmatter for a document, a leading
   `# category:` comment for a script. There is no index file, by design: invariant 5 in
   [docs/architecture.md](docs/architecture.md) says adding content must not require a structural edit.

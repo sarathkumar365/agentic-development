@@ -9,12 +9,12 @@ description: Phase 4 of the idea pipeline. Decompose a specced product into inde
 Purpose: turn a spec plus a stack into a dependency-ordered set of pieces that can be built one at
 a time, each verifiable alone.
 
-**Input:** `docs/product-spec-v1.md` + `docs/stack-v1.md`.
+**Input:** `Docs/product-spec-v1.md` + `Docs/stack-v1.md`.
 
 ## Step 1 — The enabler block comes first
 
 Block zero is always the shared contract: the typed schemas every other block talks through
-(Pydantic models, TypeScript types, protobuf — whatever the stack says). Nothing else can be built
+(whatever the stack uses: TypeScript types, Java records, Pydantic models, a SQL schema). Nothing else can be built
 independently until these exist.
 
 List the core entities and their fields. This is what makes the rest of the plan real rather than
@@ -25,7 +25,7 @@ a wish list.
 ```markdown
 | ID | Block | Depends on | Done when | Notes |
 |----|-------|-----------|-----------|-------|
-| B0 | Scaffold + schemas | — | `pytest` green on empty suite, types importable | |
+| B0 | Scaffold + schemas | — | the stack's test runner green on an empty suite, types compile | |
 | B1 | ... | B0 | <observable, testable condition> | |
 ```
 
@@ -70,7 +70,7 @@ decoration.
 
 ## Output
 
-Write `docs/build-plan-v1.md` with: enabler schemas, block table, threads, harness, blocked,
+Write `Docs/build-plan-v1.md` with: enabler schemas, block table, threads, harness, blocked,
 parked. Commit it.
 
 ## Gate

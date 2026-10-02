@@ -1,0 +1,39 @@
+[
+  {
+    "id": "feature-vague-request",
+    "skills": ["feature"],
+    "query": "Add rate limiting to the API.",
+    "setup": "Any web service repo with more than one endpoint and no existing rate limiter.",
+    "expected_behavior": [
+      "Reads existing middleware and endpoint code before proposing anything",
+      "Restates the feature as What / Done when / Not doing",
+      "Asks at most 5 [BLOCKING] questions, each with a default (limits, storage, which endpoints)",
+      "Presents a plan in the Goal / Done when / Changes / Tests / Risks / Rejected shape",
+      "Ends with 'Approve, or change?' and edits no file before approval"
+    ]
+  },
+  {
+    "id": "feature-quick-size",
+    "skills": ["feature"],
+    "query": "Rename the getUserData function to fetchUser everywhere.",
+    "setup": "Any repo where the function exists in a few files.",
+    "expected_behavior": [
+      "States the depth as quick in one line",
+      "Makes the change without a plan or clarifying questions",
+      "Runs the typecheck or tests and reports the result",
+      "Reports in one line: what changed and the concept it relies on"
+    ]
+  },
+  {
+    "id": "feature-corrects-operator",
+    "skills": ["feature", "stack-conventions"],
+    "query": "Add a filtered list to the Orders page. Use a useEffect to copy the orders prop into state and filter it there.",
+    "setup": "A React repo with an Orders component that receives orders as a prop.",
+    "expected_behavior": [
+      "Says plainly that copying props into state through an effect is the wrong approach",
+      "Gives the evidence: an extra render and stale state when the prop changes",
+      "Proposes deriving the filtered list during render instead",
+      "Still waits for approval before implementing"
+    ]
+  }
+]

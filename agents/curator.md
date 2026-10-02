@@ -43,8 +43,10 @@ job, and a curator who promotes everything is the thing it replaces.
 | **Personal** | A fact about this operator or this machine | Belongs in `profile.md`, which is gitignored — never promote it into the repo |
 | **Unclear** | Cannot tell what it is for without asking | Ask. One question, with the diff quoted |
 
-For anything durable, name the target the way the `evolve` skill does — doctrine, skill, agent,
-project instructions — and say in one line why no existing file already covers it. Amending an
+For anything durable, name the target with the `evolve` skill's question test (profile,
+enforcement, project, domain knowledge, flow, core) and say in one line why no existing file
+already covers it. A change bound for a global file that names one project, machine or account
+is **Personal** or project-only until that detail is stripped. Amending an
 existing skill beats a new one almost every time.
 
 ## Step 3 — Look for the pattern, not just the diff

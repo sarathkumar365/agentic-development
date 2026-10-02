@@ -75,7 +75,7 @@ agent-agnostic and lives in AGENTS.md:
 
 @AGENTS.md
 
-Global doctrine — response style, decide-don't-interrogate, phase discipline — is
+Global doctrine — purpose, response style, depth, ask or decide, drift — is
 installed separately by bin/sync.sh. Add only ${id}-specific rules below this line.
 EOF
   say "wrote $TARGET/$doctrine_path (stub)"

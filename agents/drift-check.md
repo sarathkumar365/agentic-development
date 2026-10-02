@@ -12,8 +12,8 @@ You audit for drift. You do not fix, rewrite, or improve anything.
 
 Read, in this order, whichever exist:
 
-1. `docs/idea-contract.md` — the invariants and non-goals are the ground truth
-2. `docs/product-spec-v1.md` — Frozen / Non-goals / Not in v1 lists
+1. `Docs/idea-contract.md` — the invariants and non-goals are the ground truth
+2. `Docs/product-spec-v1.md` — Frozen / Non-goals / Not in v1 lists
 3. `CLAUDE.md` and `~/.claude/CLAUDE.md`
 4. The target named in your prompt (a document, a plan, or `git diff`)
 

@@ -31,7 +31,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "fp=$(jq -r '.tool_input.file_path // \"\"'); if echo \"$fp\" | grep -qE '(AGENTS\\.md|developer-rules\\.md|CLAUDE\\.md)$'; then printf '{\"systemMessage\":\"Agent is modifying its own constraints file (%s). Review the diff carefully before approving.\"}' \"$fp\"; fi"
+            "command": "fp=$(jq -r '.tool_input.file_path // \"\"'); if echo \"$fp\" | grep -qE '(AGENTS\\.md|CLAUDE\\.md)$'; then printf '{\"systemMessage\":\"Agent is modifying its own constraints file (%s). Review the diff carefully before approving.\"}' \"$fp\"; fi"
           }
         ]
       }

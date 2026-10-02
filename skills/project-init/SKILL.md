@@ -1,7 +1,7 @@
 ---
 category: product
 name: project-init
-description: Scaffold a new project repository from an idea or a source document — convert the source, write README and docs, add CLAUDE.md, .gitignore and tooling config, init git, create the private GitHub repo and push. Use when the user says "initialize this project", "set up the repo", "make this a project", "start a new project", or drops a concept document and asks to begin.
+description: Scaffold a new project repository from an idea or a source document — convert the source, write README and docs, add AGENTS.md, .gitignore and tooling config, init git, create the private GitHub repo and push. Use when the user says "initialize this project", "set up the repo", "make this a project", "start a new project", or drops a concept document and asks to begin.
 ---
 
 # Project Init
@@ -23,8 +23,8 @@ If the directory already has a repo, skip creation and fill in only what is miss
 
 Any founder-supplied document is the canonical source and the tiebreaker in every later argument.
 
-- Copy the original to `docs/source/` **unmodified**, whatever its format.
-- Convert to Markdown alongside it (`pandoc`, or extract text) as `docs/source/<name>.txt`
+- Copy the original to `Docs/source/` **unmodified**, whatever its format.
+- Convert to Markdown alongside it (`pandoc`, or extract text) as `Docs/source/<name>.txt`
   or `.md`.
 - Never paraphrase the source into the README and then discard it.
 
@@ -32,9 +32,9 @@ Any founder-supplied document is the canonical source and the tiebreaker in ever
 
 ```
 README.md              project goal, north star, architecture sketch, status, open decisions
-CLAUDE.md              project-specific agent instructions (inherits ~/.claude/CLAUDE.md)
-.gitignore             language-appropriate + .env, .env.local, secrets, data/, models/
-docs/
+AGENTS.md              project-specific agent instructions (adds to the global AGENTS.md)
+.gitignore             language-appropriate + .env, .env.local, secrets
+Docs/
   source/              originals, verbatim
   idea-contract.md     Phase 0 output
   market-landscape.md  Phase 1 output
@@ -63,19 +63,12 @@ Non-goals go in the README, not buried in a doc. They are what stops scope creep
 
 ## Step 4 — Agent instructions
 
-Two files, deliberately. `AGENTS.md` is the cross-agent working agreement (Claude Code, Codex,
-Cursor and Copilot all read it). `CLAUDE.md` imports it with `@AGENTS.md` and adds only what is
-Claude-specific. Do not duplicate content between them.
-
-`CLAUDE.md` inherits the global doctrine at `~/.claude/CLAUDE.md`, so it carries only:
+`AGENTS.md` is the project's working agreement, read by every agent. It adds to the global
+`AGENTS.md` and wins where they conflict, so it carries only what is true of this project:
 
 ```markdown
-# Claude Code instructions
-
-@AGENTS.md
-
 ## Invariants
-<copied from docs/idea-contract.md — what must survive every change>
+<copied from Docs/idea-contract.md — what must survive every change>
 
 ## Non-goals
 <never build these; architectural, not config>
@@ -84,15 +77,15 @@ Claude-specific. Do not duplicate content between them.
 <test command, lint command, how to run, layout rules>
 ```
 
-`~/agentic-development/bin/stamp.sh` stamps both, plus the `Docs/` tree and
-safety hooks. Run it rather than hand-writing them.
+`~/agentic-development/bin/stamp.sh` stamps it, the per-agent stubs that import it, the `Docs/`
+tree and the safety hooks. Run it rather than hand-writing them.
 
 ## Step 5 — Git and remote
 
 ```bash
 git init -b main
 git add -A
-git commit -m "docs: establish project goal, market landscape, and data strategy"
+git commit -m "docs: establish project goal and idea contract"
 gh repo create <name> --private --source=. --remote=origin --push
 ```
 

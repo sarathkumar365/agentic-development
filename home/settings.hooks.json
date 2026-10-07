@@ -7,6 +7,15 @@
         "hooks": [
           {
             "type": "command",
+            "command": "__HOOKS_DIR__/git-guard.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
             "command": "__HOOKS_DIR__/deny-destructive-git.sh"
           }
         ]

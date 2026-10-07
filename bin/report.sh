@@ -36,7 +36,7 @@ command -v jq >/dev/null 2>&1 || { echo "report.sh needs jq. Everything else wor
 TEMPLATE="$REPO/web/hub.template.html"
 [ -f "$TEMPLATE" ] || { echo "missing $TEMPLATE" >&2; exit 2; }
 
-ROLES="skills agents commands hooks"
+ROLES="skills agents hooks"
 
 # Directory names that are recognisably agent config but have no row in lib/targets.sh.
 # Listed so the page can say "found, unsupported" instead of silently ignoring them -

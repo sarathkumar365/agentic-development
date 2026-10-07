@@ -166,7 +166,7 @@ where enforcement is agent-specific by nature.
 | Flows | `feature`, `consult`, and the idea pipeline (`idea-lock` … `project-init`, `new-idea`); `debug`, `refactor`, `review`, `explain` not built |
 | Domain knowledge | `stack-conventions`: Java, Python, TypeScript, React, PostgreSQL |
 | Project layer | built (`bin/stamp.sh`) |
-| Enforcement | three hooks for Claude Code |
+| Enforcement | four hooks for Claude Code |
 | Learning loop | `evolve`, `capture.sh` and `curator` built; `evals/feature.json` written, no runner yet; `learn` not built |
 
 ## Sources

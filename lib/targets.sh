@@ -33,7 +33,7 @@
 
 # shellcheck disable=SC2034  # consumed by the scripts that source this file
 TARGETS=(
-  "claude|$HOME/.claude|CLAUDE.md|import|skills agents commands hooks|restart Claude Code||settings.json|.hooks"
+  "claude|$HOME/.claude|CLAUDE.md|import|skills agents hooks|restart Claude Code||settings.json|.hooks"
   "codex|${CODEX_HOME:-$HOME/.codex}|AGENTS.md|link|skills|start a new codex session|||"
   "aider|$HOME/.aider|AGENTS.md|conf||start a new aider session|$HOME/.aider.conf.yml||"
 )

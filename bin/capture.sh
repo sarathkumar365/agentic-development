@@ -88,8 +88,8 @@ adopt_one() {
   group="$(basename "$(dirname "$item")")"
   name="$(basename "$item")"
   case "$group" in
-    skills|agents|commands) ;;
-    *) echo "refusing: $item is not inside skills/, agents/ or commands/" >&2; exit 2 ;;
+    skills|agents) ;;
+    *) echo "refusing: $item is not inside skills/ or agents/" >&2; exit 2 ;;
   esac
   [ -e "$REPO/$group/$name" ] && { echo "refusing: $group/$name already exists in the repo" >&2; exit 2; }
 

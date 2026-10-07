@@ -158,13 +158,14 @@ into architecture inside the same reply.
 
 ### Hooks
 
-Three global `PreToolUse` hooks, authored in Claude Code's format. `sync.sh` links the scripts
+Four global `PreToolUse` hooks, authored in Claude Code's format. `sync.sh` links the scripts
 into `~/.claude/hooks/` and merges `home/settings.hooks.json` into `~/.claude/settings.json`; the
 merge replaces only the entries this repo owns and leaves every other key untouched.
 
 | Hook | Fires on | Does |
 |---|---|---|
 | `deny-secret-files` | Read, Edit, Write | Denies `.env`, `credentials.json`, private keys. Allows `.example`, `.sample`, `.template` |
+| `git-guard` | Bash | Denies `git commit` and `git push` (including `git -C <dir>`) until `.claude/.reviewed` is newer than every changed file. Projects should gitignore the marker |
 | `deny-destructive-git` | Bash | Denies `reset --hard`, force push, `clean -f`, `branch -D` |
 | `warn-self-modify` | Edit, Write | Warns, never blocks, when an agent edits `AGENTS.md` or `CLAUDE.md` |
 

@@ -239,7 +239,7 @@ hooks_reach() {
   verdict="$(echo '{"tool_input":{"file_path":"/x/.env"}}' | "$REPO/hooks/deny-secret-files.sh" 2>/dev/null)"
   case "$verdict" in *'"deny"'*) ;; *) ok=0 ;; esac
 
-  bar "hooks reach" "$([ "$ok" = 1 ] && echo "3 hooks live in $n of $n hook-taking targets" || echo "hooks not installed or not firing")" "$ok"
+  bar "hooks reach" "$([ "$ok" = 1 ] && echo "$(ls "$REPO"/hooks | wc -l | tr -d " ") hooks live in $n of $n hook-taking targets" || echo "hooks not installed or not firing")" "$ok"
   rm -rf "$home"
 }
 
@@ -280,7 +280,7 @@ report_coverage() {
   "$REPO/bin/report.sh" --out "$out" >/dev/null 2>&1
   listed="$("$REPO/bin/inventory.sh" | grep -c '^  [a-z]' || true)"
   shown="$(grep '^const DATA = {' "$out" | sed 's/^const DATA = //; s/;$//' \
-           | jq '[.files[] | select(.role=="skills" or .role=="agents" or .role=="commands" or .role=="hooks")] | length')"
+           | jq '[.files[] | select(.role=="skills" or .role=="agents" or .role=="hooks")] | length')"
   # A skill directory can hold more files than the one line inventory prints for it, so
   # the page may show more; it must never show fewer.
   [ "$shown" -ge "$listed" ] && ok=1
@@ -303,6 +303,45 @@ report_read_only() {
   [ "$before" = "$after" ] || ok=0
   bar "report read-only" "$([ "$ok" = 1 ] && echo "wrote 1 file, changed no config" || echo "the report touched config")" "$ok"
   rm -rf "$home"
+}
+
+# --- 11b. stale prune: links whose source left the repo are removed, nothing else ----
+
+stale_prune() {
+  local home ok=1 c="" s
+  home="$(scratch)"
+  HOME="$home" run "$REPO/bin/sync.sh" >/dev/null 2>&1
+  c="$home/.claude"; s="$c/settings.json"
+  ln -s "$REPO/skills/no-such-skill" "$c/skills/ghost"
+  ln -s "$REPO/hooks/no-such-hook.sh" "$c/hooks/no-such-hook.sh"
+  mkdir -p "$home/.codex/agents" "$c/skills/hand-made"
+  ln -s "$REPO/agents/curator.md" "$home/.codex/agents/curator.md"
+  ln -s /tmp "$c/skills/elsewhere"
+  jq --arg cmd "$c/hooks/no-such-hook.sh" '.hooks.PreToolUse += [{matcher:"Bash",hooks:[{type:"command",command:$cmd}]}]' "$s" > "$s.tmp" && mv "$s.tmp" "$s"
+  HOME="$home" run "$REPO/bin/sync.sh" >/dev/null 2>&1
+  [ ! -L "$c/skills/ghost" ] && [ ! -L "$c/hooks/no-such-hook.sh" ] && [ ! -L "$home/.codex/agents/curator.md" ] || ok=0
+  [ -d "$c/skills/hand-made" ] && [ -L "$c/skills/elsewhere" ] && [ -L "$c/skills/feature" ] || ok=0
+  grep -q no-such-hook "$s" && ok=0
+  bar "stale prune" "$([ "$ok" = 1 ] && echo "3 stale links and 1 stale hook removed, others kept" || echo "stale content left or wrong thing removed")" "$ok"
+  rm -rf "$home"
+}
+
+# --- 11c. commit gate: no commit without a review newer than the changes ------------
+
+commit_gate() {
+  local r ok=1 g="$REPO/hooks/git-guard.sh" c="commit"
+  r="$(scratch)"
+  git -C "$r" init -q && touch "$r/a" && git -C "$r" add a
+  ask() { jq -nc --arg c "$1" --arg d "$2" '{tool_input:{command:$c},cwd:$d}' | "$g"; }
+  case "$(ask "git $c -m x" "$r")" in *deny*) ;; *) ok=0 ;; esac
+  case "$(ask "git -C $r $c -m x" /)" in *deny*) ;; *) ok=0 ;; esac
+  mkdir -p "$r/.claude" && sleep 1 && touch "$r/.claude/.reviewed"
+  [ -z "$(ask "git $c -m x" "$r")" ] || ok=0
+  sleep 1 && echo y > "$r/a"
+  case "$(ask 'git push' "$r")" in *deny*) ;; *) ok=0 ;; esac
+  [ -z "$(ask 'git status' "$r")" ] || ok=0
+  bar "commit gate" "$([ "$ok" = 1 ] && echo "blocks unreviewed, -C and stale; allows reviewed" || echo "gate let a commit through or blocked a reviewed one")" "$ok"
+  rm -rf "$r"
 }
 
 # --- 12. complexity cap: the install path stays small enough to trust ---------------
@@ -329,6 +368,8 @@ hooks_reach
 content_classified
 report_coverage
 report_read_only
+stale_prune
+commit_gate
 complexity_cap
 stratum_handwritten
 stratum_settings

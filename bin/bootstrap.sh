@@ -55,8 +55,9 @@ fi
 # --- 4. next steps ---------------------------------------------------------
 say ""
 say "done. Next:"
-say "  1. Edit ~/.claude/profile.md with this machine's specs (gitignored, never committed)."
-say "  2. Restart each agent so skills and agents load."
-say "  3. Verify with: $REPO_DIR/bin/inventory.sh --roles"
+. "$REPO_DIR/lib/targets.sh"  # profile.md exists only where an agent can import it
+for t in "${TARGETS[@]}"; do p="$(field "$t" 2)/profile.md"; [ -f "$p" ] && say "  - Edit $p (machine specs, never committed)."; done
+say "  - Restart each agent so skills and agents load."
+say "  - Verify with: $REPO_DIR/bin/inventory.sh --roles"
 say ""
 say "To push improvements back:  $REPO_DIR/bin/capture.sh"

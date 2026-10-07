@@ -19,7 +19,7 @@
 # the entries this repo owns and never touches any other key.
 #
 # Anything already at a destination path is backed up to <root>/backups/<timestamp>/
-# before being replaced. Nothing is deleted.
+# before being replaced. Only links into this repo that have gone stale are removed.
 
 set -euo pipefail
 
@@ -111,7 +111,7 @@ declare_hooks() {
   fi
 
   local names
-  names="$(for h in "$REPO"/hooks/*; do [ -f "$h" ] && basename "$h"; done | jq -Rnc '[inputs]')"
+  names="$( { ls "$REPO/hooks"; find "$root/hooks" -maxdepth 1 -lname "$REPO/*" -exec basename {} \; ; } 2>/dev/null | jq -Rnc '[inputs]')"
 
   tmp="$(mktemp)"
   jq --slurpfile frag "$frag" --arg at "$path" --arg dir "$root/hooks" --argjson names "$names" '
@@ -134,6 +134,17 @@ declare_hooks() {
   backup "$dst" "$root"
   mv "$tmp" "$dst"
   say "declared hooks in $dst"
+}
+
+# prune <root> <accepts> - remove links into this repo whose source is gone or whose role
+# this target no longer takes. A real file, or a link to anywhere else, is never touched.
+prune() {
+  local l to role
+  while IFS= read -r l; do
+    to="$(readlink "$l")"; role="${to#"$REPO"/}"; role="${role%%/*}"
+    [ -e "$to" ] && [[ " $2 " == *" $role "* ]] && continue
+    if [ "$DRY" = 1 ]; then say "would remove stale link $l"; else rm "$l"; say "removed stale link $l"; fi
+  done < <(find "$1" -mindepth 2 -maxdepth 2 -type l -lname "$REPO/*" 2>/dev/null)
 }
 
 # point_conf_at <doctrine> <conf_file> - make a conf-mode agent read the doctrine.
@@ -195,6 +206,7 @@ install_target() {
     fi
   fi
 
+  prune "$root" "$accepts"
   say "$id done. $hint to pick it up."
 }
 

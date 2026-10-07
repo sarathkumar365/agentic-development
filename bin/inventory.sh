@@ -26,7 +26,7 @@ for arg in "$@"; do
   esac
 done
 
-ROLES_ALL="skills agents commands hooks"
+ROLES_ALL="skills agents hooks"
 
 # meta <file> <key> - one declared value, empty if absent. Documents declare it in YAML
 # frontmatter, scripts in a leading comment; both forms are read, and only the header is

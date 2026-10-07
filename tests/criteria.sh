@@ -284,7 +284,9 @@ report_coverage() {
   # A skill directory can hold more files than the one line inventory prints for it, so
   # the page may show more; it must never show fewer.
   [ "$shown" -ge "$listed" ] && ok=1
-  bar "report coverage" "$shown of $listed inventory items on the page (bar: all)" "$ok"
+  # Content that closes a <script> tag early leaves the page blank while the data is all there.
+  [ "$(grep -o '</script' "$out" | wc -l)" -eq "$(grep -o '</script' "$REPO/web/hub.template.html" | wc -l)" ] || ok=0
+  bar "report coverage" "$shown of $listed inventory items on the page (bar: all, no stray </script>)" "$ok"
   rm -rf "$(dirname "$out")"
 }
 

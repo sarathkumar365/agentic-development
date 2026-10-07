@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Render the configured system as one self-contained HTML page: every skill, agent,
-# command, hook and doctrine file, with what is installed where on this machine.
+# hook and doctrine file, with what is installed where on this machine.
 #
 # It shows the content the hub DISTRIBUTES, not the paperwork behind building the hub.
 # docs/ and README.md are this repo's own specs and plans - they are never installed into
@@ -224,7 +224,9 @@ marker='/*__PAYLOAD__*/'
 grep -qF "$marker" "$TEMPLATE" || { echo "template has no $marker placeholder" >&2; exit 2; }
 
 tmp="$(mktemp)"; trap 'rm -f "$tmp"' EXIT
-payload > "$tmp"
+# A file that contains "</script>" would end the page's script early. "<\/" is the same
+# string in JSON and cannot close a tag.
+payload | sed 's#</#<\\/#g' > "$tmp"
 
 awk -v marker="$marker" -v data="$tmp" '
   !done {

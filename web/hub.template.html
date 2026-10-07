@@ -378,7 +378,7 @@ function overview(){
   return '<div class="wrap">'
   + '<div class="crumb">'+esc(DATA.repo||'')+'</div>'
   + '<h1 class="title">Agent Hub</h1>'
-  + '<p style="color:var(--ink-2);margin:0 0 4px">Every instruction, skill, agent, command and hook this machine\'s AI agents are running, read straight from the repo that installs them.</p>'
+  + '<p style="color:var(--ink-2);margin:0 0 4px">Every instruction, skill, agent and hook this machine\'s AI agents are running, read straight from the repo that installs them.</p>'
   + '<div class="cards">'
     + card(files.length,'files','across '+Object.keys(roles).length+' roles')
     + card(cats.size,'categories',[...cats].sort().join(' · '))
